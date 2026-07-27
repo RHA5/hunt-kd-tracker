@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Hunt Tracker — История Сессий</title>
+
+<!-- Google Fonts — строго по спецификации TYPOGRAPHY.md -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "background": "#141313",
+          "tertiary": "#dac493",
+          "on-background": "#e5e2e1",
+          "on-surface-variant": "#c4c7c7",
+          "error": "#ffb4ab"
+        },
+        fontFamily: {
+          "garamond": ["EB Garamond", "serif"],
+          "forum": ["Forum", "serif"],
+          "courier": ["Courier Prime", "monospace"],
+          "stamp": ["Special Elite", "monospace"]
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100vh;
+    overflow: hidden;
+    background-image: url('1.webp');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-color: #141313;
+    color: #e5e2e1;
+    font-family: 'EB Garamond', serif;
+  }
+  .vignette { box-shadow: inset 0 0 160px rgba(0,0,0,0.95); }
+  
+  /* ЕДИНЫЙ СТИЛЬ КАРТОЧЕК СТАТИСТИКИ */
+  .victorian-card {
+    border: 1px solid #57524a;
+    background-color: rgba(24, 22, 21, 0.92);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+  }
+
+  /* ШАПКА — Шрифт Forum по TYPOGRAPHY.md */
+  .nav-link {
+    font-family: 'Forum', serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 10px 20px;
+    color: rgba(229, 226, 225, 0.5);
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+  }
+  .nav-link:hover {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  }
+  .nav-link.active {
+    color: #ffffff;
+    font-weight: 700;
+    border-bottom: 2px solid #b5a172;
+    text-shadow: 0 0 10px rgba(218, 196, 147, 0.6);
+  }
+
+  .gradient-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #57524a 50%, transparent 100%);
+  }
+
+  /* СТИЛИЗАЦИЯ ТАБЛИЦЫ */
+  .table-th {
+    font-family: 'Forum', serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #dac493;
+    text-transform: uppercase;
+    padding: 10px 8px;
+    border-bottom: 1px solid #57524a;
+    background-color: rgba(18, 16, 15, 0.98);
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  /* Стилизация строк и ячеек по TYPOGRAPHY.md */
+  .table-row {
+    border-bottom: 1px solid #35312c;
+    transition: background-color 0.2s ease;
+  }
+  .table-row:hover {
+    background-color: rgba(218, 196, 147, 0.03);
+  }
+  .table-row:last-child {
+    border-bottom: none;
+  }
+
+  .cell-date {
+    font-family: 'Special Elite', monospace;
+    font-size: 13px;
+    color: #c4c7c7;
+    padding: 10px 8px;
+    white-space: nowrap;
+  }
+
+  .cell-num {
+    font-family: 'Special Elite', monospace;
+    font-size: 15px;
+    font-weight: bold;
+    color: #e5e2e1;
+    text-align: center;
+    padding: 10px 8px;
+  }
+
+  .cell-kd-positive {
+    font-family: 'Special Elite', monospace;
+    font-size: 15px;
+    font-weight: bold;
+    color: #4ade80; /* Зеленый при плюсе */
+    text-align: center;
+    padding: 10px 8px;
+  }
+
+  .cell-kd-negative {
+    font-family: 'Special Elite', monospace;
+    font-size: 15px;
+    font-weight: bold;
+    color: #ffb4ab; /* Красный при минусе */
+    text-align: center;
+    padding: 10px 8px;
+  }
+
+  .cell-comment {
+    font-family: 'EB Garamond', serif;
+    font-size: 14px;
+    color: #c4c7c7;
+    padding: 10px 8px;
+    text-align: left;
+  }
+
+  /* Кастомный скроллбар в викторианском стиле */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #57524a;
+    border-radius: 3px;
+    border: 1px solid #141313;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #dac493;
+  }
+</style>
+</head>
+
+<body class="h-screen w-full flex flex-col justify-between p-4 md:p-5 vignette antialiased selection:bg-error selection:text-on-error">
+
+  <!-- TOP NAVIGATION -->
+  <header class="flex justify-center items-center w-full shrink-0 relative z-40 mb-5 mt-2">
+    <nav class="flex gap-10 font-forum">
+      <a class="nav-link" href="#" onclick="goToAnalytics(event)">АНАЛИТИКА</a>
+      <a class="nav-link active" href="history.html">ИСТОРИЯ</a>
+      <a class="nav-link" href="charts.html">ГРАФИКИ</a>
+    </nav>
+  </header>
+
+  <main class="flex-grow w-full max-w-[1440px] mx-auto flex flex-col min-h-0 relative z-20 mb-3">
+    
+    <!-- ТАБЛИЦА С ИСТОРИЕЙ СЕССИЙ -->
+    <section class="victorian-card rounded-sm p-[18px] flex flex-col flex-grow min-h-0">
+      <div class="flex justify-between items-center pb-1 shrink-0">
+        <h2 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase">Архив сыгранных сессий</h2>
+      </div>
+      <div class="gradient-line mb-3.5 shrink-0"></div>
+
+      <!-- Контейнер с идеальной внутренней прокруткой -->
+      <div class="overflow-auto flex-grow min-h-0 custom-scrollbar pr-1">
+        <table class="w-full text-left border-collapse">
+          <thead class="sticky top-0 z-30">
+            <tr>
+              <th class="table-th text-left">Начало сессии</th>
+              <th class="table-th text-left">Конец сессии</th>
+              <th class="table-th text-center">Длительность</th>
+              <th class="table-th text-center">Убийств</th>
+              <th class="table-th text-center">Смертей</th>
+              <th class="table-th text-center">Матчей</th>
+              <th class="table-th text-center">KD дня</th>
+              <th class="table-th text-center">Цель KD</th>
+              <th class="table-th text-center">KPG дня</th>
+              <th class="table-th text-center">Состояние</th>
+              <th class="table-th text-left pl-4">Комментарий / сборка</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#35312c]">
+            <!-- Записи будут подгружаться из БД -->
+            <tr class="table-row">
+              <td class="cell-date">13.07.2026 20:36:04</td>
+              <td class="cell-date">14.07.2026 1:13:13</td>
+              <td class="cell-num">4.62</td>
+              <td class="cell-num">36</td>
+              <td class="cell-num">18</td>
+              <td class="cell-num">13</td>
+              <td class="cell-kd-positive">2.00</td>
+              <td class="cell-num">2</td>
+              <td class="cell-num">2.77</td>
+              <td class="cell-num">8</td>
+              <td class="cell-comment"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function goToAnalytics(event) {
+      if (event) event.preventDefault();
+      const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
+      if (isLoggedIn) {
+        window.location.href = 'preview.htm';
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
+
+</body>
+</html>

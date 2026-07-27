@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Hunt Tracker — Графики (В разработке)</title>
+
+<!-- Google Fonts — строго по спецификации TYPOGRAPHY.md -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "background": "#141313",
+          "tertiary": "#dac493",
+          "on-background": "#e5e2e1",
+          "on-surface-variant": "#c4c7c7",
+          "error": "#ffb4ab"
+        },
+        fontFamily: {
+          "garamond": ["EB Garamond", "serif"],
+          "forum": ["Forum", "serif"],
+          "courier": ["Courier Prime", "monospace"],
+          "stamp": ["Special Elite", "monospace"]
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100vh;
+    overflow: hidden;
+    background-image: url('1.webp');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-color: #141313;
+    color: #e5e2e1;
+    font-family: 'EB Garamond', serif;
+  }
+  .vignette { box-shadow: inset 0 0 160px rgba(0,0,0,0.95); }
+  
+  /* ШАПКА — Шрифт Forum по TYPOGRAPHY.md */
+  .nav-link {
+    font-family: 'Forum', serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 10px 20px;
+    color: rgba(229, 226, 225, 0.5);
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+  }
+  .nav-link:hover {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  }
+  .nav-link.active {
+    color: #ffffff;
+    font-weight: 700;
+    border-bottom: 2px solid #b5a172;
+    text-shadow: 0 0 10px rgba(218, 196, 147, 0.6);
+  }
+
+  .dev-message {
+    font-family: 'Forum', serif;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #dac493;
+    text-shadow: 0 0 20px rgba(218, 196, 147, 0.4);
+  }
+</style>
+</head>
+
+<body class="h-screen w-full flex flex-col items-center p-4 md:p-5 vignette antialiased selection:bg-error selection:text-on-error">
+
+  <!-- TOP NAVIGATION -->
+  <header class="flex justify-center items-center w-full shrink-0 relative z-40 mb-6 mt-2">
+    <nav class="flex gap-10 font-forum">
+      <a class="nav-link" href="#" onclick="goToAnalytics(event)">АНАЛИТИКА</a>
+      <a class="nav-link" href="history.html">ИСТОРИЯ</a>
+      <a class="nav-link active" href="charts.html">ГРАФИКИ</a>
+    </nav>
+  </header>
+
+  <main class="flex-grow w-full flex items-center justify-center relative z-20">
+    <div class="text-center">
+      <h1 class="dev-message text-2xl md:text-4xl">Страница в разработке</h1>
+      <div class="h-[1px] w-48 mx-auto mt-4 bg-gradient-to-r from-transparent via-[#57524a] to-transparent"></div>
+    </div>
+  </main>
+
+  <script>
+    function goToAnalytics(event) {
+      if (event) event.preventDefault();
+      const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
+      if (isLoggedIn) {
+        window.location.href = 'preview.htm';
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
+
+</body>
+</html>

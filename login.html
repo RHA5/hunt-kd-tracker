@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Hunt Tracker — Вход</title>
+
+    <!-- Google Fonts — строго по спецификации TYPOGRAPHY.md -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "background": "#141313",
+                        "tertiary": "#dac493",
+                        "on-background": "#e5e2e1",
+                        "on-surface-variant": "#c4c7c7",
+                        "error": "#ffb4ab"
+                    },
+                    fontFamily: {
+                        "garamond": ["EB Garamond", "serif"],
+                        "forum": ["Forum", "serif"],
+                        "courier": ["Courier Prime", "monospace"],
+                        "stamp": ["Special Elite", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            font-family: 'EB Garamond', serif;
+        }
+
+        /* ФОНОВОЕ ИЗОБРАЖЕНИЕ */
+        .bg-container {
+            position: fixed;
+            inset: 0;
+            background-image: url('вход/bg_login.webp');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+
+        .vignette {
+            position: absolute;
+            inset: 0;
+            box-shadow: inset 0 0 180px rgba(0,0,0,0.85);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* КОНТЕЙНЕР ФОРМЫ — СМЕЩЕНИЕ ТОЧНО НА БЕЛО-ЖЕЛТУЮ БУМАГУ КНИГИ */
+        .login-overlay {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-container {
+            /* Сдвигаем форму вправо и вниз, так как "бумага" на обложке книги немного смещена от географического центра экрана */
+            transform: translate(26px, 12px);
+            width: 530px;
+            max-width: 80vw;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px 30px;
+        }
+
+        /* ПОЛЯ ВВОДА — С ЛИНИЯМИ И ПОДПИСЯМИ НА ЛИНИИ */
+        .input-group {
+            position: relative;
+            border-bottom: 2px solid #3d3122; /* Четкая контрастная линия */
+            padding-bottom: 2px;
+            display: flex;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        .input-label {
+            font-family: 'Forum', serif;
+            font-size: 14px;
+            color: #231b13; /* Отчетливый темный цвет */
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            white-space: nowrap;
+            padding-right: 12px;
+            padding-bottom: 4px;
+            user-select: none;
+        }
+
+        .hunt-input {
+            flex-grow: 1;
+            background: transparent !important;
+            border: none !important;
+            color: #120d08 !important; /* Насыщенный темный цвет ввода */
+            font-family: 'Special Elite', monospace !important;
+            font-size: 20px !important;
+            font-weight: 600;
+            padding: 0 0 2px 0 !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Сброс желтого автозаполнения Chrome */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #120d08;
+            -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* ГЛАВНАЯ КНОПКА ВОЙТИ */
+        .btn-identify {
+            margin-top: 12px;
+            height: 42px;
+            width: 240px;
+            align-self: center;
+            background: linear-gradient(180deg, #26201b 0%, #171411 100%);
+            border: 2px solid #8c734b;
+            color: #d9c39c;
+            font-family: 'Forum', serif;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.8);
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            cursor: pointer;
+        }
+
+        .btn-identify:hover {
+            border-color: #e6c885;
+            background: linear-gradient(180deg, #332a22 0%, #1f1b17 100%);
+            box-shadow: inset 0 0 10px rgba(230, 200, 133, 0.2), 0 0 20px rgba(181, 161, 114, 0.5);
+            color: #ffffff;
+        }
+
+        .btn-identify:active {
+            transform: scale(0.98) translateY(1px);
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-tertiary selection:text-background">
+
+    <div class="bg-container">
+        <div class="vignette"></div>
+    </div>
+
+    <main class="login-overlay">
+        <form class="form-container" onsubmit="return handleLogin(event)" novalidate>
+
+            <div class="input-group">
+                <label class="input-label" for="username">ЛОГИН:</label>
+                <input class="hunt-input" id="username" type="text" autocomplete="username">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="password">ПАРОЛЬ:</label>
+                <input class="hunt-input" id="password" type="password" autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-identify">
+                ВОЙТИ
+            </button>
+
+        </form>
+    </main>
+
+    <script>
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            // Если логин или пароль не введены — переход на главную страницу зрителя index.html
+            if (!username || !password) {
+                localStorage.removeItem('sb-tcdtgptiwjmoxugfjvmh-auth-token');
+                window.location.href = 'index.html';
+                return false;
+            }
+
+            // Имитация успешного входа: сохраняем токен в localStorage
+            localStorage.setItem('sb-tcdtgptiwjmoxugfjvmh-auth-token', 'admin-session-active');
+            
+            // Переход на панель управления
+            window.location.href = 'preview.htm';
+            return false;
+        }
+
+        function goToAnalytics(event) {
+          if (event) event.preventDefault();
+          const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
+          if (isLoggedIn) {
+            window.location.href = 'preview.htm';
+          } else {
+            window.location.href = 'index.html';
+          }
+        }
+    </script>
+</body>
+</html>
