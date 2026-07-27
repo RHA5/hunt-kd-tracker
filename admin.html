@@ -68,11 +68,16 @@
   }
 
   /* Скрываем стрелочки у number input */
-  input[type=number]::-webkit-inner-spin-button, 
-  input[type=number]::-webkit-outer-spin-button { 
-    -webkit-appearance: none; margin: 0; 
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
   }
-  input[type=number] { -moz-appearance: textfield; }
+  input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 
   .stepper-input {
     width: 44px !important;
@@ -377,7 +382,7 @@
             <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">УБИЙСТВА</span>
             <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
               <button onclick="adjustInput('kills', -1)" class="stepper-btn">-</button>
-              <input id="input-kills" type="number" value="0" class="stepper-input">
+              <input id="input-kills" type="number" value="0" class="stepper-input" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
               <button onclick="adjustInput('kills', 1)" class="stepper-btn">+</button>
             </div>
           </div>
@@ -387,7 +392,7 @@
             <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">СМЕРТИ</span>
             <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
               <button onclick="adjustInput('deaths', -1)" class="stepper-btn">-</button>
-              <input id="input-deaths" type="number" value="0" class="stepper-input">
+              <input id="input-deaths" type="number" value="0" class="stepper-input" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
               <button onclick="adjustInput('deaths', 1)" class="stepper-btn">+</button>
             </div>
           </div>
