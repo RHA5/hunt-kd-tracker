@@ -3,17 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>Hunt Tracker Dashboard — Панель стримера</title>
+<title>Hunt Tracker Dashboard</title>
 
 <!-- Google Fonts — строго по спецификации TYPOGRAPHY.md -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-
-<!-- Supabase SDK & Config -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js"></script>
 
 <!-- Chart.js для динамического графика -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -59,6 +55,7 @@
   }
   .vignette { box-shadow: inset 0 0 160px rgba(0,0,0,0.95); }
   
+  /* ЕДИНЫЙ СТИЛЬ КАРТОЧЕК СТАТИСТИКИ */
   .victorian-card {
     border: 1px solid #57524a;
     background-color: rgba(24, 22, 21, 0.92);
@@ -66,12 +63,16 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
   }
 
+  /* Скрываем стрелочки у number input */
   input[type=number]::-webkit-inner-spin-button, 
-  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; margin: 0; 
+  }
   input[type=number] { -moz-appearance: textfield; }
 
   .stepper-input {
     width: 44px !important;
+    background-color: transparent !important;
     background: transparent !important;
     border: none !important;
     color: #ffffff !important;
@@ -79,8 +80,11 @@
     font-size: 20px !important;
     text-align: center !important;
     outline: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
   }
 
+  /* ШАПКА — Шрифт Forum по TYPOGRAPHY.md */
   .nav-link {
     font-family: 'Forum', serif;
     font-size: 13px;
@@ -90,89 +94,250 @@
     transition: all 0.3s ease;
     text-transform: uppercase;
   }
-  .nav-link:hover { color: #ffffff; }
+  .nav-link:hover {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  }
   .nav-link.active {
     color: #ffffff;
     font-weight: 700;
     border-bottom: 2px solid #b5a172;
+    text-shadow: 0 0 10px rgba(218, 196, 147, 0.6);
   }
 
-  @keyframes emberPulse {
-    0%, 100% { border-color: #8c1414; box-shadow: 0 0 6px rgba(140, 20, 20, 0.35); }
-    50% { border-color: #ff4d4d; box-shadow: 0 0 24px rgba(255, 77, 77, 0.9); }
+  /* ГЛАВНАЯ КНОПКА СЕССИИ — Шрифт Forum по TYPOGRAPHY.md */
+  @keyframes emberPulseContinuous {
+    0%, 100% {
+      border-color: #8c1414;
+      box-shadow: 0 0 6px rgba(140, 20, 20, 0.35), inset 0 0 4px rgba(140, 20, 20, 0.15);
+    }
+    50% {
+      border-color: #ff4d4d;
+      box-shadow: 0 0 24px rgba(255, 77, 77, 0.9), inset 0 0 14px rgba(255, 77, 77, 0.5);
+    }
   }
 
   .hunt-btn-main {
-    width: 240px !important; height: 44px !important;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; background: linear-gradient(180deg, #26201b 0%, #171411 100%);
-    border: 2px solid #8c734b; color: #d9c39c; font-family: 'Forum', serif;
-    font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    width: 240px !important;
+    height: 44px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    text-transform: uppercase;
+    position: relative;
+    background: linear-gradient(180deg, #26201b 0%, #171411 100%);
+    border: 2px solid #8c734b;
+    color: #d9c39c;
+    font-family: 'Forum', serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.8);
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  .hunt-btn-main.active { background: linear-gradient(180deg, #360a0a 0%, #1a0303 100%); animation: emberPulse 5.5s infinite linear; color: #ffdad6; }
+  .hunt-btn-main:hover {
+    border-color: #e6c885;
+    background: linear-gradient(180deg, #332a22 0%, #1f1b17 100%);
+    box-shadow: inset 0 0 10px rgba(230, 200, 133, 0.2), 0 0 20px rgba(181, 161, 114, 0.5);
+    color: #ffffff;
+  }
+  .hunt-btn-main:active { transform: scale(0.97) translateY(2px); }
+  .hunt-btn-main.active {
+    background: linear-gradient(180deg, #360a0a 0%, #1a0303 100%);
+    animation: emberPulseContinuous 5.5s infinite linear;
+    color: #ffdad6;
+  }
 
+  /* СТЕППЕРЫ И КНОПКА ЗАПИСИ — Шрифт Forum по TYPOGRAPHY.md */
   .stepper-btn {
-    width: 30px; height: 30px; background: #1f1c1c; border: 1px solid #57524a;
-    color: #b5a172; font-family: 'Forum', serif; font-size: 15px; font-weight: 700;
-    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: #1f1c1c;
+    border: 1px solid #57524a;
+    color: #b5a172;
+    font-family: 'Forum', serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
   }
-  .stepper-btn:hover { background: #b5a172; color: #141313; }
+  .stepper-btn:hover {
+    background: #b5a172;
+    color: #141313;
+    border-color: #e6c885;
+  }
 
   .btn-record {
-    width: 170px !important; height: 44px;
-    background: rgba(10, 9, 9, 0.7); border: 1px solid #3d3935;
-    color: #d9c39c; font-family: 'Forum', serif; font-size: 11px;
-    letter-spacing: 2px; cursor: pointer; position: relative; overflow: hidden;
+    width: 170px !important;
+    height: 44px;
+    padding: 0 8px;
+    background: rgba(10, 9, 9, 0.7);
+    border: 1px solid #3d3935;
+    color: #d9c39c;
+    font-family: 'Forum', serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: border-color 0.25s, color 0.25s, box-shadow 0.25s;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .btn-record:hover {
+    border-color: #e6c885;
+    color: #ffffff;
+    box-shadow: 0 0 15px rgba(181, 161, 114, 0.35);
   }
 
-  .btn-hold-fill { position: absolute; bottom: 0; left: 0; top: 0; width: 0%; background: rgba(180, 20, 20, 0.75); pointer-events: none; }
+  .btn-hold-fill {
+    position: absolute;
+    bottom: 0; left: 0; top: 0;
+    width: 0%;
+    background: rgba(180, 20, 20, 0.75);
+    pointer-events: none;
+  }
 
-  .vial-assembly { display: flex; align-items: center; width: 100%; position: relative; padding-top: 10px; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.9)); }
-  .cap-left, .cap-right { width: 16px; height: 32px; background: linear-gradient(180deg, #6e675f 0%, #1e1c1a 45%, #47423c 100%); border: 1px solid #999590; }
-  .cap-left { border-radius: 5px 0 0 5px; } .cap-right { border-radius: 0 5px 5px 0; }
-  .glass-tube { flex-grow: 1; height: 24px; background: #080707; border-top: 1px solid #7a7672; border-bottom: 1px solid #7a7672; position: relative; overflow: hidden; margin: 0 -2px; }
-  .liquid-container { height: 100%; width: 0%; background: linear-gradient(90deg, #3d0002 0%, #850009 60%, #c91818 100%); position: relative; transition: width 1.5s; }
-  .progress-badge { position: absolute; top: -3px; transform: translateX(-50%); font-family: 'Special Elite', monospace; font-size: 13px; color: #dac493; transition: left 1.5s; white-space: nowrap; }
+  .info-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid #57524a;
+    background: #171515;
+    color: #b5a172;
+    font-family: 'EB Garamond', serif;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: help;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .info-badge:hover {
+    border-color: #e6c885;
+    color: #ffffff;
+    background: #2b2520;
+    box-shadow: 0 0 10px rgba(181, 161, 114, 0.4);
+  }
 
-  .stat-row { display: flex; justify-content: space-between; padding-top: 3.5px; padding-bottom: 3.5px; border-bottom: 1px solid #35312c; font-family: 'EB Garamond', serif; font-size: 15px; }
+  .tooltip-card {
+    position: absolute;
+    right: -10px;
+    top: 32px;
+    width: 300px;
+    background: rgba(18, 16, 16, 0.98);
+    border: 1px solid #b5a172;
+    padding: 12px;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.98);
+    z-index: 100 !important;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .info-badge:hover .tooltip-card { display: flex; }
+
+  /* СТЕКЛЯННАЯ КОЛБА (ПРОГРЕСС-БАР) */
+  .vial-assembly {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    padding-top: 10px;
+    padding-bottom: 5px;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.9));
+  }
+  .cap-left, .cap-right {
+    width: 16px; height: 32px;
+    background: linear-gradient(180deg, #6e675f 0%, #1e1c1a 45%, #47423c 100%);
+    border: 1px solid #999590; z-index: 20; box-shadow: 0 4px 10px rgba(0,0,0,0.9);
+  }
+  .cap-left { border-radius: 5px 0 0 5px; }
+  .cap-right { border-radius: 0 5px 5px 0; }
+
+  .glass-tube {
+    flex-grow: 1; height: 24px; background: #080707;
+    border-top: 1px solid #7a7672; border-bottom: 1px solid #7a7672;
+    position: relative; overflow: hidden; margin: 0 -2px;
+    box-shadow: inset 0 5px 12px rgba(0,0,0,0.95);
+  }
+
+  .liquid-container {
+    height: 100%; width: 50%;
+    background: linear-gradient(90deg, #3d0002 0%, #850009 60%, #c91818 100%);
+    position: relative; z-index: 5; transition: width 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: 0 0 15px rgba(201, 24, 24, 0.5); overflow: hidden;
+  }
+
+  @keyframes pulseWave { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+  .fx-pulse {
+    position: absolute; top: 0; bottom: 0; width: 50%;
+    background: linear-gradient(90deg, transparent, rgba(255, 180, 171, 0.4), transparent);
+    animation: pulseWave 2.5s infinite ease-in-out;
+  }
+
+  @keyframes meniscusGlow { 0%, 100% { box-shadow: 0 0 8px #ffffff, 0 0 15px #ff4d4d; } 50% { box-shadow: 0 0 14px #ffffff, 0 0 25px #ff6b6b; } }
+  .meniscus-edge {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 3px; background: #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 12px #ff4d4d; animation: meniscusGlow 1.5s infinite ease-in-out; z-index: 10;
+  }
+
+  .ticks-overlay {
+    position: absolute; inset: 0; display: flex; justify-content: space-between; padding: 0 25%; pointer-events: none; z-index: 12;
+  }
+  .tick-line { width: 1px; height: 100%; background: rgba(255, 255, 255, 0.22); position: relative; }
+  .tick-mark { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 10px; font-family: 'Forum', serif; color: rgba(218, 196, 147, 0.7); }
+
+  .glass-reflection {
+    position: absolute; top: 2px; left: 0; right: 0; height: 35%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%); pointer-events: none; z-index: 15;
+  }
+
+  .progress-badge {
+    position: absolute; top: -3px; transform: translateX(-50%);
+    font-family: 'Special Elite', monospace; font-size: 13px; color: #dac493;
+    text-shadow: 0 0 10px rgba(0,0,0,0.9), 0 2px 4px #000000; pointer-events: none;
+    transition: left 0.7s cubic-bezier(0.25, 1, 0.5, 1); z-index: 30; white-space: nowrap;
+  }
+
+  /* ЕДИНЫЕ ИДЕНТИЧНЫЕ СТРОКИ СТАТИСТИКИ (СТАНДАРТНЫЕ: КОЛОНКИ 1 И 3) */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 3.5px;
+    padding-bottom: 3.5px;
+    border-bottom: 1px solid #35312c;
+    font-family: 'EB Garamond', serif;
+    font-size: 15px;
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: #c4c7c7; }
   .stat-val { font-weight: 700; color: #e5e2e1; font-family: 'Special Elite', monospace; font-size: 17px; }
-  .gradient-line { height: 1px; background: linear-gradient(90deg, transparent 0%, #57524a 50%, transparent 100%); }
 
-  /* MODAL STYLES */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
-    display: none; align-items: center; justify-content: center; z-index: 100;
+  .gradient-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #57524a 50%, transparent 100%);
   }
-  .modal-content {
-    background: url('1.webp') center/cover;
-    border: 2px solid #b5a172; width: 600px; max-width: 90vw; position: relative;
-    box-shadow: 0 0 50px rgba(0,0,0,1);
-  }
-  .modal-inner { background: rgba(20, 19, 19, 0.94); padding: 30px; display: flex; flex-direction: column; gap: 20px; }
-  
-  .character-img { width: 180px; height: 180px; border-radius: 50%; border: 3px solid #b5a172; object-fit: cover; box-shadow: 0 0 20px rgba(181, 161, 114, 0.4); }
-  .speech-bubble {
-    background: #1a1817; border: 1px solid #57524a; padding: 15px; border-radius: 8px; position: relative;
-    font-family: 'EB Garamond', serif; font-style: italic; color: #c4c7c7;
-  }
-  .speech-bubble::after { content: ''; position: absolute; left: -10px; top: 20px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid #57524a; }
-
-  .condition-dot { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #57524a; display: flex; align-items: center; justify-content: center; cursor: pointer; font-family: 'Special Elite', monospace; font-size: 12px; transition: all 0.2s; }
-  .condition-dot:hover { border-color: #dac493; background: rgba(218, 196, 147, 0.1); }
-  .condition-dot.active { background: #dac493; color: #141313; border-color: #ffffff; box-shadow: 0 0 15px #dac493; }
-
-  .hunt-input-dark {
-    width: 100%; background: rgba(0,0,0,0.4); border: 1px solid #3d3935; color: #e5e2e1;
-    padding: 10px; font-family: 'EB Garamond', serif; outline: none;
-  }
-  .hunt-input-dark:focus { border-color: #b5a172; }
 </style>
 </head>
 
-<body class="h-screen w-full flex flex-col justify-between p-4 md:p-5 vignette antialiased">
+<body class="h-screen w-full flex flex-col justify-between p-4 md:p-5 vignette antialiased selection:bg-error selection:text-on-error">
 
+  <!-- TOP NAVIGATION -->
   <header class="flex justify-center items-center w-full shrink-0 relative z-40 mb-6 mt-2">
     <nav class="flex gap-10 font-forum">
       <a class="nav-link active" href="#" onclick="goToAnalytics(event)">АНАЛИТИКА</a>
@@ -183,21 +348,27 @@
 
   <main class="flex-grow w-full max-w-[1440px] mx-auto flex flex-col gap-4 relative z-20 min-h-0">
 
-    <!-- COMMAND STRIP -->
+    <!-- COMMAND STRIP / CONTROLS (БЛОК УПРАВЛЕНИЯ — ТРИ НЕЗАВИСИМЫЕ ПЛАШКИ С ФИКСИРОВАННОЙ ШИРИНОЙ) -->
     <section id="admin-panel" class="flex flex-wrap items-center justify-center gap-6 w-full relative z-50 shrink-0 mb-6">
-      <div class="victorian-card rounded-sm p-4 w-[280px] h-[82px] flex items-center justify-center">
+      
+      <!-- LEFT CARD: MAIN HUNT BUTTON -->
+      <div class="victorian-card rounded-sm p-4 w-[280px] h-[82px] flex items-center justify-center shadow-xl">
         <button id="btn-toggle-hunt" onclick="toggleHuntSession()" class="hunt-btn-main">
           <span id="hunt-status-text">НАЧАТЬ ОХОТУ</span>
         </button>
       </div>
 
+      <!-- MIDDLE CARD: LIVE TIMER DISPLAY — Моноширинный Courier Prime по TYPOGRAPHY.md -->
       <div class="victorian-card rounded-sm p-4 w-[220px] h-[82px] flex flex-col items-center justify-center gap-0.5 shadow-xl">
         <span class="font-forum text-[10px] font-bold text-[#8e9192] tracking-widest uppercase">ВРЕМЯ В БОЮ</span>
-        <span id="timer-display" class="font-courier text-2xl text-[#8e9192] tracking-widest">00:00:00</span>
+        <span id="timer-display" class="font-courier text-2xl text-[#8e9192] tracking-widest transition-all">00:00:00</span>
       </div>
 
-      <div class="victorian-card rounded-sm px-4 py-3 w-[510px] h-[82px] flex items-end justify-between shadow-xl">
+      <!-- RIGHT CARD: INPUT STEPPERS & RECORD (Идеальное выравнивание по нижней границе интерактивных элементов) -->
+      <div class="victorian-card rounded-sm px-4 py-3 w-[510px] h-[82px] flex items-end justify-between shadow-xl relative z-50">
+        
         <div class="flex items-end gap-4">
+          <!-- Kills -->
           <div class="flex flex-col items-center gap-1">
             <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">УБИЙСТВА</span>
             <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
@@ -206,6 +377,8 @@
               <button onclick="adjustInput('kills', 1)" class="stepper-btn">+</button>
             </div>
           </div>
+
+          <!-- Deaths -->
           <div class="flex flex-col items-center gap-1">
             <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">СМЕРТИ</span>
             <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
@@ -216,322 +389,309 @@
           </div>
         </div>
 
+        <!-- Submit Action + Справка "?" на одной линии с инпутами (события onmousedown/touch сохранены) -->
         <div class="flex items-center gap-2 h-[44px]">
-          <button id="btn-record" class="btn-record" onmousedown="startHold()" onmouseup="endHold()" onmouseleave="cancelHold()">
+          <button id="btn-record" class="btn-record"
+                  onmousedown="startHold()" onmouseup="endHold()" onmouseleave="cancelHold()"
+                  ontouchstart="startHold()" ontouchend="endHold()">
             <div class="btn-hold-fill" id="hold-fill"></div>
-            <span id="record-txt" class="relative z-10">ЗАПИСАТЬ МАТЧ</span>
+            <span id="record-txt" style="position: relative; z-index: 2;">ЗАПИСАТЬ МАТЧ</span>
           </button>
+
+          <div class="info-badge relative">?
+            <div class="tooltip-card">
+              <div class="font-forum text-xs text-tertiary tracking-wider border-b border-surface-variant pb-1.5 uppercase">Правила Записи и Коррекции</div>
+              <div class="font-garamond text-xs text-on-surface-variant leading-snug">🟢 <b>Сыгранный матч:</b> Введите числа -> добавляет К/Д и <b>+1 матч</b>.</div>
+              <div class="font-garamond text-xs text-on-surface-variant leading-snug">🟡 <b>Исправление ошибки:</b> Введите отрицательное число -> меняет К/Д без изменения каток.</div>
+              <div class="font-garamond text-xs text-on-surface-variant leading-snug">🔴 <b>Списать 1 катку:</b> Выставьте <b>0</b> киллов и <b>0</b> смертей, затем <b>зажмите кнопку на 3 секунды</b>.</div>
+            </div>
+          </div>
         </div>
+
       </div>
+
     </section>
 
-    <!-- PROGRESS BAR -->
-    <section class="w-full flex flex-col gap-1 px-2">
-      <div class="font-forum text-sm font-bold text-tertiary tracking-[4px] uppercase text-center mb-1">ПРОГРЕСС РОСТА KD</div>
+    <!-- PROGRESS BAR SECTION WITH HEADER -->
+    <section class="w-full flex flex-col gap-1 relative z-10 shrink-0 px-2">
+      <div class="font-forum text-sm md:text-base font-bold text-tertiary tracking-[4px] uppercase text-center mb-1">ПРОГРЕСС РОСТА KD</div>
       <div class="vial-assembly">
-        <div id="progress-percent" class="progress-badge" style="left: 0%;">0.00%</div>
+        <div id="progress-percent" class="progress-badge" style="left: 50%;">50.00%</div>
         <div class="cap-left"></div>
         <div class="glass-tube">
-          <div id="liquid-bar" class="liquid-container"></div>
+          <div class="ticks-overlay">
+            <div class="tick-line"><span class="tick-mark">I</span></div>
+            <div class="tick-line"><span class="tick-mark">II</span></div>
+            <div class="tick-line"><span class="tick-mark">III</span></div>
+          </div>
+          <div id="liquid-bar" class="liquid-container" style="width: 50%;">
+            <div class="fx-pulse"></div>
+            <div class="meniscus-edge"></div>
+          </div>
+          <div class="glass-reflection"></div>
         </div>
         <div class="cap-right"></div>
       </div>
     </section>
 
-    <!-- STATISTICS GRID -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow min-h-0 mt-6">
-      <div class="flex flex-col gap-4">
-        <div class="victorian-card p-[18px] h-full overflow-auto custom-scrollbar">
-          <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-2">Цели</h3>
-          <div class="stat-row"><span>Ближайшая (+0.01)</span><span id="micro-target-kd" class="stat-val text-tertiary">0.00</span></div>
-          <div class="stat-row"><span>Киллов до +0.01</span><span id="micro-target-kills" class="stat-val">0</span></div>
-          <div class="gradient-line my-4"></div>
-          <div class="stat-row"><span>Фрагов до 2.0</span><span id="global-target-kills" class="stat-val">0</span></div>
-          <div class="stat-row"><span>Общий КД</span><span id="total-kd" class="stat-val text-tertiary">0.00</span></div>
+    <!-- МОНОЛИТНАЯ СИММЕТРИЧНАЯ СЕТКА С ОДИНАКОВОЙ ВЫСОТОЙ (h-full min-h-0) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow min-h-0 relative z-10 mt-6">
+
+      <!-- КОЛОНКА 1 (ЛЕВАЯ): ЦЕЛИ И ПРОГНОЗЫ (ВЫСОТА h-full) -->
+      <div class="flex flex-col gap-4 min-h-0 h-full">
+        <div class="victorian-card p-[18px] rounded-sm flex flex-col justify-start h-full min-h-0">
+          
+          <div>
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Промежуточная цель (+0.01)</h3>
+            <div class="gradient-line mb-2.5"></div>
+            <div class="stat-row"><span class="stat-label">Ближайшая цель</span><span class="stat-val text-tertiary">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось убийств</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Честный прогноз матчей</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось сессий</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Примерная дата</span><span class="stat-val">--.--.----</span></div>
+          </div>
+          
+          <div class="mt-2.5">
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Глобальная цель 2.0 KD</h3>
+            <div class="gradient-line mb-2.5"></div>
+            <div class="stat-row"><span class="stat-label">Фрагов до цели 2.0</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось матчей до 2.0</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось сессий до 2.0</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Дата достижения цели</span><span class="stat-val">--.--.----</span></div>
+          </div>
+
+          <div class="mt-2.5">
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Идеальный сценарий</h3>
+            <div class="gradient-line mb-2.5"></div>
+            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Матчей)</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Сессий)</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Дата)</span><span class="stat-val">--.--.----</span></div>
+          </div>
+
         </div>
       </div>
-      <div class="flex flex-col gap-4">
-        <div class="victorian-card p-[18px] shrink-0">
-          <h2 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-2">Сессия</h2>
-          <div id="live-delta" class="text-center py-2 font-stamp text-xl text-gray-400">+0.00000 KD</div>
-          <div class="stat-row"><span>Убито сегодня</span><span id="session-kills" class="stat-val">0</span></div>
-          <div class="stat-row"><span>Смертей сегодня</span><span id="session-deaths" class="stat-val">0</span></div>
-          <div class="stat-row"><span>Матчей сегодня</span><span id="session-matches" class="stat-val">0</span></div>
-          <div class="stat-row"><span>KD сегодня</span><span id="session-kd" class="stat-val text-tertiary">0.00</span></div>
+
+      <!-- КОЛОНКА 2 (ЦЕНТРАЛЬНАЯ): ТЕКУЩИЙ БОЙ (СЕССИЯ + ГРАФИК, ВЫСОТА h-full) -->
+      <div class="flex flex-col gap-4 min-h-0 h-full">
+
+        <!-- СТАТИСТИКА ДНЯ (ВЫРАВНИВАНИЕ ВЕРХА С БОКОВЫМИ ЗАГОЛОВКАМИ) -->
+        <div class="victorian-card p-[18px] rounded-sm flex flex-col shrink-0 justify-start">
+          <h2 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Статистика дня</h2>
+          <div class="gradient-line my-1.5"></div>
+          
+          <!-- ДИНАМИКА КД (КРУПНО ПО ЦЕНТРУ, БЕЗ ЛИНИЙ СНИЗУ) -->
+          <div class="text-center py-2">
+            <span id="live-delta" class="font-stamp text-2xl font-bold text-gray-400 tracking-wider">+0.00000 KD</span>
+          </div>
+
+          <!-- МЕТРИКИ ДНЯ (ШРИФТ КРУПНЕЕ НА 2px) -->
+          <div class="stat-row text-[17px]"><span class="stat-label">Убито за сегодня</span><span class="stat-val text-[19px]">0</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">Смертей за сегодня</span><span class="stat-val text-[19px]">0</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">Матчей за сегодня</span><span class="stat-val text-[19px]">0</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">KD за сегодня</span><span class="stat-val text-tertiary text-[19px]">0.00</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">KPG за сегодня</span><span class="stat-val text-[19px]">0.00</span></div>
         </div>
-        <div class="victorian-card p-[18px] flex-grow min-h-0">
-          <canvas id="sessionChart"></canvas>
+
+        <!-- ЖИВОЙ ГРАФИК СЕССИИ (РАСТЯГИВАЕТСЯ НА ОСТАВШУЮСЯ ВЫСОТУ И ВЫРАВНИВАЕТ НИЗ h-full) -->
+        <div class="victorian-card p-[18px] rounded-sm flex flex-col flex-grow justify-start min-h-0">
+          <div class="flex justify-between items-center pb-1 shrink-0">
+            <span class="font-forum text-[11px] text-tertiary font-bold uppercase tracking-wider">Динамика эффективности в бою</span>
+            <span class="font-garamond text-[11px] text-gray-500">Live Chart</span>
+          </div>
+          <div class="gradient-line mb-2 shrink-0"></div>
+          <div class="w-full flex-grow relative min-h-0">
+            <canvas id="sessionChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- КОЛОНКА 3 (ПРАВАЯ): ИТОГИ И СТАТИСТИКА ЧЕЛЛЕНДЖА (ВЫСОТА h-full) -->
+      <div class="flex flex-col gap-4 min-h-0 h-full">
+        <div class="victorian-card p-[18px] rounded-sm flex flex-col justify-start h-full min-h-0">
+          
+          <div>
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Текущие итоги аккаунта</h3>
+            <div class="gradient-line mb-2.5"></div>
+            <div class="stat-row"><span class="stat-label">Общий КД</span><span class="stat-val text-tertiary">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Всего убийств</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Всего смертей</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Сыграно матчей</span><span class="stat-val">0</span></div>
+          </div>
+          
+          <div class="mt-4">
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Статистика челленджа</h3>
+            <div class="gradient-line mb-2.5"></div>
+            <div class="stat-row"><span class="stat-label">Убито за челлендж</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Смертей за челлендж</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">KD за челлендж</span><span class="stat-val text-tertiary">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Лучший KD</span><span class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Худший KD</span><span class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Всего сессий</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Средний KPG</span><span class="stat-val">0.00</span></div>
+            <!-- Чистая цифра справа по правилам TYPOGRAPHY.md -->
+            <div class="stat-row"><span class="stat-label">Стрик дней KD > 2.0 (дней)</span><span class="stat-val text-tertiary">0</span></div>
+          </div>
+
         </div>
       </div>
-      <div class="flex flex-col gap-4">
-        <div class="victorian-card p-[18px] h-full overflow-auto custom-scrollbar">
-          <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-2">Итоги</h3>
-          <div class="stat-row"><span>Всего убийств</span><span id="total-kills" class="stat-val">0</span></div>
-          <div class="stat-row"><span>Всего смертей</span><span id="total-deaths" class="stat-val">0</span></div>
-          <div class="stat-row"><span>Всего матчей</span><span id="total-matches" class="stat-val">0</span></div>
-          <div class="gradient-line my-4"></div>
-          <div class="stat-row"><span>KD за челлендж</span><span id="challenge-kd" class="stat-val text-tertiary">0.00</span></div>
-          <div class="stat-row"><span>Киллов за челлендж</span><span id="challenge-kills" class="stat-val">0</span></div>
-        </div>
-      </div>
+
     </div>
   </main>
 
-  <!-- SESSION END MODAL -->
-  <div id="session-modal" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-inner">
-        <div class="flex items-center gap-6">
-          <img id="char-img" src="manus.jpg" class="character-img" alt="Character">
-          <div class="flex-grow flex flex-col gap-3">
-            <h2 class="font-forum text-2xl text-tertiary uppercase tracking-widest">Итоги Охоты</h2>
-            <div id="char-speech" class="speech-bubble">Похоже, сегодня Болота были сильнее тебя...</div>
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-3 gap-4 py-4 border-y border-[#3d3935]">
-          <div class="text-center"><div class="font-forum text-[10px] text-gray-500 uppercase">УБИЙСТВА</div><div id="modal-kills" class="font-stamp text-2xl">0</div></div>
-          <div class="text-center"><div class="font-forum text-[10px] text-gray-500 uppercase">СМЕРТИ</div><div id="modal-deaths" class="font-stamp text-2xl">0</div></div>
-          <div class="text-center"><div class="font-forum text-[10px] text-gray-500 uppercase">КД ДНЯ</div><div id="modal-kd" class="font-stamp text-2xl text-tertiary">0.00</div></div>
-        </div>
-
-        <div>
-          <label class="font-forum text-[11px] text-tertiary uppercase tracking-wider mb-2 block">Твоё состояние (1-10):</label>
-          <div class="flex justify-between gap-1" id="condition-selector">
-            <div onclick="setCondition(1)" class="condition-dot">1</div>
-            <div onclick="setCondition(2)" class="condition-dot">2</div>
-            <div onclick="setCondition(3)" class="condition-dot">3</div>
-            <div onclick="setCondition(4)" class="condition-dot">4</div>
-            <div onclick="setCondition(5)" class="condition-dot active">5</div>
-            <div onclick="setCondition(6)" class="condition-dot">6</div>
-            <div onclick="setCondition(7)" class="condition-dot">7</div>
-            <div onclick="setCondition(8)" class="condition-dot">8</div>
-            <div onclick="setCondition(9)" class="condition-dot">9</div>
-            <div onclick="setCondition(10)" class="condition-dot">10</div>
-          </div>
-        </div>
-
-        <div>
-          <label class="font-forum text-[11px] text-tertiary uppercase tracking-wider mb-2 block">Комментарий / Сборка:</label>
-          <input type="text" id="session-comment" class="hunt-input-dark" placeholder="Например: Winfield + Nagant, играл агрессивно">
-        </div>
-
-        <button onclick="confirmCloseSession()" class="hunt-btn-main w-full">ПОДТВЕРДИТЬ И ВЫЙТИ</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- ИНИЦИАЛИЗАЦИЯ CHART.JS И НАВИГАЦИЯ -->
   <script>
-    let globalStats = null;
-    let currentSession = null;
+    let state = {
+      sessionActive: false,
+      sessionKills: 0,
+      sessionDeaths: 0,
+      sessionMatches: 0
+    };
+
     let timerInterval = null;
     let chartInstance = null;
-    let selectedCondition = 5;
 
-    const token = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token');
-    if (!token) window.location.href = 'login.html';
+    document.addEventListener("DOMContentLoaded", function() {
+      initChart();
+    });
 
-    document.addEventListener("DOMContentLoaded", () => { initChart(); loadData(); });
-
-    async function loadData() {
-      try {
-        await loadGlobalStats();
-        await checkActiveSession();
-        calculateAndRender();
-      } catch (err) { console.error(err); }
-    }
-
-    async function loadGlobalStats() {
-      const { data, error } = await window.supabase.from('hunter_profile').select('*').single();
-      if (error) throw error;
-      globalStats = data;
-    }
-
-    async function checkActiveSession() {
-      const { data } = await window.supabase.from('sessions').select('*').eq('is_active', true).order('start_time', { ascending: false }).limit(1).single();
-      if (data) {
-        currentSession = data;
-        updateHuntUI(true);
-        startTimer(new Date(currentSession.start_time));
-        loadSessionMatches();
-      } else {
-        currentSession = null;
-        updateHuntUI(false);
-      }
-    }
-
-    async function toggleHuntSession() {
-      if (!currentSession) {
-        const { data, error } = await window.supabase.from('sessions').insert([{ is_active: true, start_time: new Date().toISOString() }]).select().single();
-        if (error) return alert("Ошибка старта");
-        currentSession = data;
-        updateHuntUI(true);
-        startTimer(new Date(currentSession.start_time));
-      } else {
-        showEndModal();
-      }
-    }
-
-    function showEndModal() {
-      const kd = currentSession.deaths > 0 ? (currentSession.kills / currentSession.deaths) : currentSession.kills;
-      document.getElementById('modal-kills').innerText = currentSession.kills;
-      document.getElementById('modal-deaths').innerText = currentSession.deaths;
-      document.getElementById('modal-kd').innerText = kd.toFixed(2);
-      
-      const charImg = document.getElementById('char-img');
-      const speech = document.getElementById('char-speech');
-
-      if (kd < 2.0) {
-        charImg.src = 'manus.jpg';
-        speech.innerText = "Это было жалко. Может, Хант — это просто не твое? Удали и иди регай Дарк Соулс.";
-      } else if (kd < 4.0) {
-        charImg.src = 'fifield.png';
-        speech.innerText = "Неплохо, но ты же знаешь — серверы лагали, а регистрация попаданий сегодня была против тебя.";
-      } else {
-        charImg.src = 'billy.gif';
-        speech.innerText = "That's amazing! You're the King of the Bayou! Do you like what you see?";
-      }
-
-      document.getElementById('session-modal').style.display = 'flex';
-    }
-
-    function setCondition(n) {
-      selectedCondition = n;
-      document.querySelectorAll('.condition-dot').forEach((dot, i) => {
-        dot.classList.toggle('active', i + 1 === n);
+    function initChart() {
+      const ctx = document.getElementById('sessionChart').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Старт', 'Матч 1', 'Матч 2', 'Матч 3', 'Матч 4'],
+          datasets: [{
+            label: 'KD Сессии',
+            data: [0.00, 1.50, 2.00, 1.80, 2.40],
+            borderColor: '#dac493',
+            backgroundColor: 'rgba(218, 196, 147, 0.08)',
+            borderWidth: 2,
+            pointBackgroundColor: '#b5a172',
+            pointRadius: 3,
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#8e9192', font: { family: 'EB Garamond', size: 10 } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#8e9192', font: { family: 'EB Garamond', size: 10 } }
+            }
+          }
+        }
       });
     }
 
-    async function confirmCloseSession() {
-      const comment = document.getElementById('session-comment').value;
-      const { error } = await window.supabase.from('sessions').update({ 
-        is_active: false, 
-        end_time: new Date().toISOString(),
-        condition_rating: selectedCondition,
-        comment: comment
-      }).eq('id', currentSession.id);
-
-      if (error) return alert("Ошибка закрытия");
-      
-      document.getElementById('session-modal').style.display = 'none';
-      currentSession = null;
-      updateHuntUI(false);
-      stopTimer();
-      loadData();
+    function adjustInput(field, amount) {
+      const input = document.getElementById('input-' + field);
+      let val = parseInt(input.value) || 0;
+      input.value = val + amount; // Позволяем вводить отрицательные значения для коррекции!
     }
 
-    async function recordMatch() {
-      if (!currentSession) return alert("Начни охоту!");
+    function toggleHuntSession() {
+      state.sessionActive = !state.sessionActive;
+      const statusText = document.getElementById('hunt-status-text');
+      const btn = document.getElementById('btn-toggle-hunt');
+      const timerDisplay = document.getElementById('timer-display');
+
+      if (state.sessionActive) {
+        statusText.textContent = "ЗАВЕРШИТЬ ОХОТУ";
+        btn.classList.add('active');
+        let elapsed = 0;
+        timerDisplay.classList.add('text-error');
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          elapsed++;
+          const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+          const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+          const s = String(elapsed % 60).padStart(2, '0');
+          timerDisplay.textContent = `${h}:${m}:${s}`;
+        }, 1000);
+      } else {
+        statusText.textContent = "НАЧАТЬ ОХОТУ";
+        btn.classList.remove('active');
+        clearInterval(timerInterval);
+        timerDisplay.classList.remove('text-error');
+        timerDisplay.textContent = "00:00:00";
+      }
+    }
+
+    /* HOLD TO DELETE MATCH LOGIC */
+    let holdTimer = null;
+    let holdProgressInterval = null;
+    let holdStartTime = 0;
+    const HOLD_DURATION = 3000;
+
+    function startHold() {
       const k = parseInt(document.getElementById('input-kills').value) || 0;
       const d = parseInt(document.getElementById('input-deaths').value) || 0;
 
-      await window.supabase.from('matches').insert([{ session_id: currentSession.id, kills: k, deaths: d }]);
-      
-      const newKills = currentSession.kills + k;
-      const newDeaths = currentSession.deaths + d;
-      const newMatches = currentSession.matches_count + (k === 0 && d === 0 ? 0 : 1);
-      
-      const { data: upSess } = await window.supabase.from('sessions').update({ kills: newKills, deaths: newDeaths, matches_count: newMatches }).eq('id', currentSession.id).select().single();
-      currentSession = upSess;
+      if (k === 0 && d === 0) {
+        holdStartTime = Date.now();
+        const fillElem = document.getElementById('hold-fill');
+        const recordTxt = document.getElementById('record-txt');
+        
+        recordTxt.textContent = "УДАЛЯЕМ 1 КАТКУ";
+        recordTxt.style.color = "#ffdad6";
 
-      await window.supabase.from('hunter_profile').update({ 
-        total_kills: globalStats.total_kills + k, 
-        total_deaths: globalStats.total_deaths + d,
-        total_matches: globalStats.total_matches + (k === 0 && d === 0 ? 0 : 1)
-      }).eq('id', globalStats.id);
+        holdProgressInterval = setInterval(() => {
+          const elapsed = Date.now() - holdStartTime;
+          const pct = Math.min(100, (elapsed / HOLD_DURATION) * 100);
+          fillElem.style.width = pct + '%';
+        }, 30);
 
+        holdTimer = setTimeout(() => {
+          cancelHold();
+          alert("1 катка списана!");
+        }, HOLD_DURATION);
+      }
+    }
+
+    function endHold() {
+      const elapsed = Date.now() - holdStartTime;
+      if (elapsed < HOLD_DURATION) {
+        cancelHold();
+        recordMatch();
+      }
+    }
+
+    function cancelHold() {
+      clearTimeout(holdTimer);
+      clearInterval(holdProgressInterval);
+      document.getElementById('hold-fill').style.width = '0%';
+      const recordTxt = document.getElementById('record-txt');
+      recordTxt.textContent = "ЗАПИСАТЬ МАТЧ";
+      recordTxt.style.color = "#d9c39c";
+    }
+
+    function recordMatch() {
+      if (!state.sessionActive) {
+        alert("Сначала начни охоту (кнопка 'НАЧАТЬ ОХОТУ')!");
+        return;
+      }
       document.getElementById('input-kills').value = 0;
       document.getElementById('input-deaths').value = 0;
-      loadData();
     }
 
-    function calculateAndRender() {
-      if (!globalStats) return;
-      const tk = globalStats.total_kills;
-      const td = globalStats.total_deaths;
-      const currentKD = tk / td;
-      
-      document.getElementById('total-kd').innerText = currentKD.toFixed(2);
-      document.getElementById('total-kills').innerText = tk.toLocaleString();
-      document.getElementById('total-deaths').innerText = td.toLocaleString();
-      
-      const ck = tk - globalStats.start_kills;
-      const cd = td - globalStats.start_deaths;
-      document.getElementById('challenge-kd').innerText = (cd > 0 ? ck / cd : 0).toFixed(2);
-      document.getElementById('challenge-kills').innerText = ck.toLocaleString();
-
-      const progress = Math.max(0, Math.min(100, ((currentKD - 1.72) / (2.00 - 1.72)) * 100));
-      document.getElementById('liquid-bar').style.width = progress.toFixed(2) + '%';
-      document.getElementById('progress-percent').innerText = progress.toFixed(2) + '%';
-      document.getElementById('progress-percent').style.left = progress.toFixed(2) + '%';
-
-      if (currentSession) {
-        document.getElementById('session-kills').innerText = currentSession.kills;
-        document.getElementById('session-deaths').innerText = currentSession.deaths;
-        document.getElementById('session-matches').innerText = currentSession.matches_count;
-        const skd = currentSession.deaths > 0 ? currentSession.kills / currentSession.deaths : currentSession.kills;
-        document.getElementById('session-kd').innerText = skd.toFixed(2);
-      }
-
-      const microKD = Math.round(currentKD * 100) / 100 + 0.01;
-      document.getElementById('micro-target-kd').innerText = microKD.toFixed(2);
-      document.getElementById('micro-target-kills').innerText = Math.max(0, Math.ceil((td * microKD) - tk));
-      document.getElementById('global-target-kills').innerText = Math.max(0, Math.ceil((td * 2.0) - tk));
-    }
-
-    function adjustInput(f, a) { const i = document.getElementById('input-'+f); i.value = (parseInt(i.value)||0)+a; }
-    function startTimer(s) { clearInterval(timerInterval); timerInterval = setInterval(() => {
-      const e = Math.floor((new Date() - s) / 1000);
-      const h = String(Math.floor(e / 3600)).padStart(2, '0');
-      const m = String(Math.floor((e % 3600) / 60)).padStart(2, '0');
-      const sc = String(e % 60).padStart(2, '0');
-      document.getElementById('timer-display').textContent = `${h}:${m}:${sc}`;
-    }, 1000); }
-    function stopTimer() { clearInterval(timerInterval); }
-    function updateHuntUI(a) {
-      const s = document.getElementById('hunt-status-text');
-      const b = document.getElementById('btn-toggle-hunt');
-      s.textContent = a ? "ЗАВЕРШИТЬ ОХОТУ" : "НАЧАТЬ ОХОТУ";
-      b.classList.toggle('active', a);
-    }
-    async function loadSessionMatches() {
-      if (!currentSession) return;
-      const { data } = await window.supabase.from('matches').select('*').eq('session_id', currentSession.id).order('created_at', { ascending: true });
-      if (data && chartInstance) {
-        let rk = 0, rd = 0;
-        const kds = [0];
-        data.forEach(m => { rk += m.kills; rd += m.deaths; kds.push(rd > 0 ? rk / rd : rk); });
-        chartInstance.data.labels = ['Старт', ...data.map((_, i) => i + 1)];
-        chartInstance.data.datasets[0].data = kds;
-        chartInstance.update();
+    function goToAnalytics(event) {
+      if (event) event.preventDefault();
+      const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
+      if (isLoggedIn) {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'index.html';
       }
     }
-    function initChart() {
-      chartInstance = new Chart(document.getElementById('sessionChart'), {
-        type: 'line', data: { labels: ['Старт'], datasets: [{ label: 'KD', data: [0], borderColor: '#dac493', tension: 0.3, fill: true, backgroundColor: 'rgba(218, 196, 147, 0.05)' }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#8e9192' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8e9192' } } } }
-      });
-    }
-    function goToAnalytics(e) { if (e) e.preventDefault(); window.location.href = 'admin.html'; }
-    let holdTimer = null; let holdStartTime = 0;
-    function startHold() {
-      if (document.getElementById('input-kills').value == 0 && document.getElementById('input-deaths').value == 0) {
-        holdStartTime = Date.now();
-        document.getElementById('record-txt').textContent = "УДАЛЯЕМ 1 КАТКУ";
-        document.getElementById('hold-fill').style.transition = 'width 3s linear';
-        document.getElementById('hold-fill').style.width = '100%';
-        holdTimer = setTimeout(async () => {
-          if (currentSession && currentSession.matches_count > 0) {
-            await window.supabase.from('sessions').update({ matches_count: currentSession.matches_count - 1 }).eq('id', currentSession.id);
-            await window.supabase.from('hunter_profile').update({ total_matches: globalStats.total_matches - 1 }).eq('id', globalStats.id);
-            alert("1 катка списана!"); loadData();
-          }
-          cancelHold();
-        }, 3000);
-      }
-    }
-    function endHold() { if (Date.now() - holdStartTime < 3000) { cancelHold(); recordMatch(); } }
-    function cancelHold() { clearTimeout(holdTimer); document.getElementById('hold-fill').style.transition = 'none'; document.getElementById('hold-fill').style.width = '0%'; document.getElementById('record-txt').textContent = "ЗАПИСАТЬ МАТЧ"; }
   </script>
+
 </body>
 </html>
