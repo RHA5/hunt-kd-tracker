@@ -28,3 +28,9 @@
   1. Если в `localStorage` есть ключ `sb-tcdtgptiwjmoxugfjvmh-auth-token` — перенаправлять на `admin.html` (панель стримера).
   2. Если ключа нет — перенаправлять на `index.html` (экран зрителя).
 - Все внутренние ссылки в меню должны быть относительными (например, `href="history.html"`).
+
+## 5. СТРУКТУРА БАЗЫ ДАННЫХ (SUPABASE):
+- `hunter_profile`: `total_kills`, `total_deaths`, `total_matches`, `start_kills`, `start_deaths`, `start_date`, `mmr`, `target_kd`.
+- `sessions`: `start_time`, `end_time`, `duration_hours`, `kills`, `deaths`, `matches_count`, `target_kd`, `condition_rating`, `comment`, `is_active`.
+- `matches`: `session_id` (FK), `kills`, `deaths`, `created_at`.
+- `auth_config`: `login`, `password`.

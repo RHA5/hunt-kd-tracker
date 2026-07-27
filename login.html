@@ -10,6 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
 
+    <!-- Supabase SDK & Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <script>
@@ -191,24 +195,38 @@
     </main>
 
     <script>
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
+            const usernameInput = document.getElementById('username').value.trim();
+            const passwordInput = document.getElementById('password').value.trim();
 
-            // Если логин или пароль не введены — переход на главную страницу зрителя index.html
-            if (!username || !password) {
-                localStorage.removeItem('sb-tcdtgptiwjmoxugfjvmh-auth-token');
-                window.location.href = 'index.html';
+            if (!usernameInput || !passwordInput) {
+                alert('Введите логин и пароль');
                 return false;
             }
 
-            // Имитация успешного входа: сохраняем токен в localStorage
-            localStorage.setItem('sb-tcdtgptiwjmoxugfjvmh-auth-token', 'admin-session-active');
+            try {
+                const { data, error } = await window.supabase
+                    .from('auth_config')
+                    .select('*')
+                    .eq('login', usernameInput)
+                    .eq('password', passwordInput)
+                    .single();
+
+                if (error || !data) {
+                    alert('Неверный логин или пароль');
+                    return false;
+                }
+
+                // Успешный вход
+                localStorage.setItem('sb-tcdtgptiwjmoxugfjvmh-auth-token', 'admin-session-active');
+                window.location.href = 'admin.html';
+            } catch (err) {
+                console.error('Ошибка авторизации:', err);
+                alert('Ошибка сервера');
+            }
             
-            // Переход на панель управления
-            window.location.href = 'admin.html';
             return false;
         }
 
