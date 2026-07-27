@@ -11,6 +11,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
+<!-- Supabase SDK & Config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+
 <!-- Chart.js для динамического графика -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -197,7 +201,7 @@
     <section class="w-full flex flex-col gap-1 relative z-10 shrink-0 px-2">
       <div class="font-forum text-sm md:text-base font-bold text-tertiary tracking-[4px] uppercase text-center mb-1">ПРОГРЕСС РОСТА KD</div>
       <div class="vial-assembly">
-        <div id="progress-percent" class="progress-badge" style="left: 50%;">50.00%</div>
+        <div id="progress-percent" class="progress-badge" style="left: 0%;">0.00</div>
         <div class="cap-left"></div>
         <div class="glass-tube">
           <div class="ticks-overlay">
@@ -205,7 +209,7 @@
             <div class="tick-line"><span class="tick-mark">II</span></div>
             <div class="tick-line"><span class="tick-mark">III</span></div>
           </div>
-          <div id="liquid-bar" class="liquid-container" style="width: 50%;">
+          <div id="liquid-bar" class="liquid-container" style="width: 0%;">
             <div class="fx-pulse"></div>
             <div class="meniscus-edge"></div>
           </div>
@@ -225,28 +229,28 @@
           <div>
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Промежуточная цель (+0.01)</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Ближайшая цель</span><span class="stat-val text-tertiary">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось убийств</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Честный прогноз матчей</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось сессий</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Примерная дата</span><span class="stat-val">--.--.----</span></div>
+            <div class="stat-row"><span class="stat-label">Ближайшая цель</span><span id="micro-target-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось убийств</span><span id="micro-target-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Честный прогноз матчей</span><span id="micro-target-matches" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось сессий</span><span id="micro-target-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Примерная дата</span><span id="micro-target-date" class="stat-val">--.--.----</span></div>
           </div>
           
           <div class="mt-2.5">
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Глобальная цель 2.0 KD</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Фрагов до цели 2.0</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось матчей до 2.0</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось сессий до 2.0</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Дата достижения цели</span><span class="stat-val">--.--.----</span></div>
+            <div class="stat-row"><span class="stat-label">Фрагов до цели 2.0</span><span id="global-target-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось матчей до 2.0</span><span id="global-target-matches" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось сессий до 2.0</span><span id="global-target-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Дата достижения цели</span><span id="global-target-date" class="stat-val">--.--.----</span></div>
           </div>
 
           <div class="mt-2.5">
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Идеальный сценарий</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Матчей)</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Сессий)</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Дата)</span><span class="stat-val">--.--.----</span></div>
+            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Матчей)</span><span id="ideal-matches" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Сессий)</span><span id="ideal-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Дата)</span><span id="ideal-date" class="stat-val">--.--.----</span></div>
           </div>
 
         </div>
@@ -266,11 +270,11 @@
           </div>
 
           <!-- МЕТРИКИ ДНЯ -->
-          <div class="stat-row text-[17px]"><span class="stat-label">Убито за сегодня</span><span class="stat-val text-[19px]">0</span></div>
-          <div class="stat-row text-[17px]"><span class="stat-label">Смертей за сегодня</span><span class="stat-val text-[19px]">0</span></div>
-          <div class="stat-row text-[17px]"><span class="stat-label">Матчей за сегодня</span><span class="stat-val text-[19px]">0</span></div>
-          <div class="stat-row text-[17px]"><span class="stat-label">KD за сегодня</span><span class="stat-val text-tertiary text-[19px]">0.00</span></div>
-          <div class="stat-row text-[17px]"><span class="stat-label">KPG за сегодня</span><span class="stat-val text-[19px]">0.00</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">Убито за сегодня</span><span id="session-kills" class="stat-val text-[19px]">0</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">Смертей за сегодня</span><span id="session-deaths" class="stat-val text-[19px]">0</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">Матчей за сегодня</span><span id="session-matches" class="stat-val text-[19px]">0</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">KD за сегодня</span><span id="session-kd" class="stat-val text-[19px]">0.00</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">KPG за сегодня</span><span id="session-kpg" class="stat-val text-[19px]">0.00</span></div>
         </div>
 
         <!-- ЖИВОЙ ГРАФИК СЕССИИ -->
@@ -294,24 +298,24 @@
           <div>
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Текущие итоги аккаунта</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Общий КД</span><span class="stat-val text-tertiary">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Всего убийств</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Всего смертей</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Сыграно матчей</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Общий КД</span><span id="total-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Всего убийств</span><span id="total-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Всего смертей</span><span id="total-deaths" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Сыграно матчей</span><span id="total-matches" class="stat-val">0</span></div>
           </div>
           
           <div class="mt-4">
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Статистика челленджа</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Убито за челлендж</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Смертей за челлендж</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">KD за челлендж</span><span class="stat-val text-tertiary">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Лучший KD</span><span class="stat-val">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Худший KD</span><span class="stat-val">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Всего сессий</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Средний KPG</span><span class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Убито за челлендж</span><span id="challenge-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Смертей за челлендж</span><span id="challenge-deaths" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">KD за челлендж</span><span id="challenge-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Лучший KD</span><span id="best-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Худший KD</span><span id="worst-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Всего сессий</span><span id="total-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Средний KPG</span><span id="avg-kpg" class="stat-val">0.00</span></div>
             <!-- Чистая цифра справа по правилам TYPOGRAPHY.md -->
-            <div class="stat-row"><span class="stat-label">Стрик дней KD > 2.0 (дней)</span><span class="stat-val text-tertiary">0</span></div>
+            <div class="stat-row"><span class="stat-label">Стрик дней KD > 2.0 (дней)</span><span id="kd-streak" class="stat-val">0</span></div>
           </div>
 
         </div>
@@ -323,10 +327,148 @@
   <!-- ИНИЦИАЛИЗАЦИЯ CHART.JS И НАВИГАЦИЯ -->
   <script>
     let chartInstance = null;
+    let globalStats = null;
+    let currentSession = null;
 
     document.addEventListener("DOMContentLoaded", function() {
       initChart();
+      loadData();
     });
+
+    async function loadData() {
+      try {
+        await loadGlobalStats();
+        await checkActiveSession();
+        calculateAndRender();
+      } catch (err) {
+        console.error("Ошибка загрузки данных:", err);
+      }
+    }
+
+    async function loadGlobalStats() {
+      const { data, error } = await window.supabase
+        .from('hunter_profile')
+        .select('*')
+        .single();
+      
+      if (error) throw error;
+      globalStats = data;
+    }
+
+    async function checkActiveSession() {
+      const { data } = await window.supabase
+        .from('sessions')
+        .select('*')
+        .eq('is_active', true)
+        .order('start_time', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data) {
+        currentSession = data;
+        loadSessionMatches();
+      }
+    }
+
+    async function loadSessionMatches() {
+      if (!currentSession) return;
+      const { data } = await window.supabase
+        .from('matches')
+        .select('*')
+        .eq('session_id', currentSession.id)
+        .order('created_at', { ascending: true });
+
+      if (data && chartInstance) {
+        let rollingKills = 0;
+        let rollingDeaths = 0;
+        const kdData = [0];
+        
+        data.forEach(m => {
+          rollingKills += m.kills;
+          rollingDeaths += m.deaths;
+          kdData.push(rollingDeaths > 0 ? (rollingKills / rollingDeaths) : rollingKills);
+        });
+
+        chartInstance.data.labels = ['Старт', ...data.map((_, i) => `Матч ${i+1}`)];
+        chartInstance.data.datasets[0].data = kdData;
+        chartInstance.update();
+      }
+    }
+
+    function calculateAndRender() {
+      if (!globalStats) return;
+
+      const tk = globalStats.total_kills;
+      const td = globalStats.total_deaths;
+      const tm = globalStats.total_matches;
+      const targetKD = globalStats.target_kd || 2.00;
+
+      // Текущий КД
+      const currentKD = tk / td;
+      document.getElementById('total-kd').innerText = currentKD.toFixed(2);
+      document.getElementById('total-kills').innerText = tk.toLocaleString();
+      document.getElementById('total-deaths').innerText = td.toLocaleString();
+      document.getElementById('total-matches').innerText = tm.toLocaleString();
+
+      // Статистика челленджа
+      const ck = tk - globalStats.start_kills;
+      const cd = td - globalStats.start_deaths;
+      const ckd = cd > 0 ? ck / cd : 0;
+      document.getElementById('challenge-kills').innerText = ck.toLocaleString();
+      document.getElementById('challenge-deaths').innerText = cd.toLocaleString();
+      document.getElementById('challenge-kd').innerText = ckd.toFixed(2);
+
+      // Прогресс-бар (от 1.72 до 2.00)
+      const startKD = 1.72;
+      const endKD = 2.00;
+      let progress = ((currentKD - startKD) / (endKD - startKD)) * 100;
+      progress = Math.max(0, Math.min(100, progress));
+      
+      document.getElementById('liquid-bar').style.width = progress.toFixed(2) + '%';
+      document.getElementById('progress-percent').innerText = currentKD.toFixed(2); // Выводим само КД на плашку, как в оригинале
+      document.getElementById('progress-percent').style.left = progress.toFixed(2) + '%';
+
+      // Сессия
+      if (currentSession) {
+        document.getElementById('session-kills').innerText = currentSession.kills;
+        document.getElementById('session-deaths').innerText = currentSession.deaths;
+        document.getElementById('session-matches').innerText = currentSession.matches_count;
+        const skd = currentSession.deaths > 0 ? currentSession.kills / currentSession.deaths : currentSession.kills;
+        document.getElementById('session-kd').innerText = skd.toFixed(2);
+
+        const skpg = currentSession.matches_count > 0 ? currentSession.kills / currentSession.matches_count : 0;
+        const kpgElem = document.getElementById('session-kpg');
+        if (kpgElem) kpgElem.innerText = skpg.toFixed(2);
+
+        // Расчет прироста KD (live-delta)
+        const oldKD = (globalStats.total_kills - currentSession.kills) / Math.max(1, globalStats.total_deaths - currentSession.deaths);
+        const delta = (globalStats.total_kills / globalStats.total_deaths) - oldKD;
+        const deltaElem = document.getElementById('live-delta');
+        if (deltaElem) {
+          const sign = delta > 0 ? '+' : (delta < 0 ? '' : '+');
+          deltaElem.innerText = `${sign}${delta.toFixed(5)} KD`;
+          
+          deltaElem.classList.remove('text-gray-400', 'text-[#81c784]', 'text-[#ffb4ab]');
+          if (delta > 0) {
+            deltaElem.classList.add('text-[#81c784]');
+          } else if (delta < 0) {
+            deltaElem.classList.add('text-[#ffb4ab]');
+          } else {
+            deltaElem.classList.add('text-gray-400');
+          }
+        }
+      }
+
+      // Промежуточная цель (+0.01)
+      const microTargetKD = Math.round(currentKD * 100) / 100 + 0.01;
+      const microTargetKills = Math.ceil((td * microTargetKD) - tk);
+      document.getElementById('micro-target-kd').innerText = microTargetKD.toFixed(2);
+      document.getElementById('micro-target-kills').innerText = Math.max(0, microTargetKills);
+
+      // Глобальная цель 2.0
+      const globalTargetKills = Math.ceil((td * targetKD) - tk);
+      document.getElementById('global-target-kills').innerText = Math.max(0, globalTargetKills);
+    }
 
     function initChart() {
       const ctx = document.getElementById('sessionChart').getContext('2d');

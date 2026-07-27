@@ -11,6 +11,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
+<!-- Supabase SDK & Config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+
 <!-- Chart.js для динамического графика -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -416,7 +420,7 @@
     <section class="w-full flex flex-col gap-1 relative z-10 shrink-0 px-2">
       <div class="font-forum text-sm md:text-base font-bold text-tertiary tracking-[4px] uppercase text-center mb-1">ПРОГРЕСС РОСТА KD</div>
       <div class="vial-assembly">
-        <div id="progress-percent" class="progress-badge" style="left: 50%;">50.00%</div>
+        <div id="progress-percent" class="progress-badge" style="left: 0%;">0.00</div>
         <div class="cap-left"></div>
         <div class="glass-tube">
           <div class="ticks-overlay">
@@ -424,7 +428,7 @@
             <div class="tick-line"><span class="tick-mark">II</span></div>
             <div class="tick-line"><span class="tick-mark">III</span></div>
           </div>
-          <div id="liquid-bar" class="liquid-container" style="width: 50%;">
+          <div id="liquid-bar" class="liquid-container" style="width: 0%;">
             <div class="fx-pulse"></div>
             <div class="meniscus-edge"></div>
           </div>
@@ -444,20 +448,20 @@
           <div>
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Промежуточная цель (+0.01)</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Ближайшая цель</span><span class="stat-val text-tertiary">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось убийств</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Честный прогноз матчей</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось сессий</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Примерная дата</span><span class="stat-val">--.--.----</span></div>
+            <div class="stat-row"><span class="stat-label">Ближайшая цель</span><span id="micro-target-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось убийств</span><span id="micro-target-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Честный прогноз матчей</span><span id="micro-target-matches" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось сессий</span><span id="micro-target-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Примерная дата</span><span id="micro-target-date" class="stat-val">--.--.----</span></div>
           </div>
           
           <div class="mt-2.5">
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Глобальная цель 2.0 KD</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Фрагов до цели 2.0</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось матчей до 2.0</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось сессий до 2.0</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Дата достижения цели</span><span class="stat-val">--.--.----</span></div>
+            <div class="stat-row"><span class="stat-label">Фрагов до цели 2.0</span><span id="global-target-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось матчей до 2.0</span><span id="global-target-matches" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось сессий до 2.0</span><span id="global-target-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Дата достижения цели</span><span id="global-target-date" class="stat-val">--.--.----</span></div>
           </div>
 
           <div class="mt-2.5">
@@ -485,11 +489,11 @@
           </div>
 
           <!-- МЕТРИКИ ДНЯ (ШРИФТ КРУПНЕЕ НА 2px) -->
-          <div class="stat-row text-[17px]"><span class="stat-label">Убито за сегодня</span><span class="stat-val text-[19px]">0</span></div>
-          <div class="stat-row text-[17px]"><span class="stat-label">Смертей за сегодня</span><span class="stat-val text-[19px]">0</span></div>
-          <div class="stat-row text-[17px]"><span class="stat-label">Матчей за сегодня</span><span class="stat-val text-[19px]">0</span></div>
-          <div class="stat-row text-[17px]"><span class="stat-label">KD за сегодня</span><span class="stat-val text-tertiary text-[19px]">0.00</span></div>
-          <div class="stat-row text-[17px]"><span class="stat-label">KPG за сегодня</span><span class="stat-val text-[19px]">0.00</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">Убито за сегодня</span><span id="session-kills" class="stat-val text-[19px]">0</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">Смертей за сегодня</span><span id="session-deaths" class="stat-val text-[19px]">0</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">Матчей за сегодня</span><span id="session-matches" class="stat-val text-[19px]">0</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">KD за сегодня</span><span id="session-kd" class="stat-val text-[19px]">0.00</span></div>
+          <div class="stat-row text-[17px]"><span class="stat-label">KPG за сегодня</span><span id="session-kpg" class="stat-val text-[19px]">0.00</span></div>
         </div>
 
         <!-- ЖИВОЙ ГРАФИК СЕССИИ (РАСТЯГИВАЕТСЯ НА ОСТАВШУЮСЯ ВЫСОТУ И ВЫРАВНИВАЕТ НИЗ h-full) -->
@@ -513,24 +517,24 @@
           <div>
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Текущие итоги аккаунта</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Общий КД</span><span class="stat-val text-tertiary">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Всего убийств</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Всего смертей</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Сыграно матчей</span><span class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Общий КД</span><span id="total-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Всего убийств</span><span id="total-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Всего смертей</span><span id="total-deaths" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Сыграно матчей</span><span id="total-matches" class="stat-val">0</span></div>
           </div>
           
           <div class="mt-4">
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Статистика челленджа</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Убито за челлендж</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Смертей за челлендж</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">KD за челлендж</span><span class="stat-val text-tertiary">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Лучший KD</span><span class="stat-val">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Худший KD</span><span class="stat-val">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Всего сессий</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Средний KPG</span><span class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Убито за челлендж</span><span id="challenge-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Смертей за челлендж</span><span id="challenge-deaths" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">KD за челлендж</span><span id="challenge-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Лучший KD</span><span id="best-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Худший KD</span><span id="worst-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Всего сессий</span><span id="total-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Средний KPG</span><span id="avg-kpg" class="stat-val">0.00</span></div>
             <!-- Чистая цифра справа по правилам TYPOGRAPHY.md -->
-            <div class="stat-row"><span class="stat-label">Стрик дней KD > 2.0 (дней)</span><span class="stat-val text-tertiary">0</span></div>
+            <div class="stat-row"><span class="stat-label">Стрик дней KD > 2.0 (дней)</span><span id="kd-streak" class="stat-val">0</span></div>
           </div>
 
         </div>
@@ -541,19 +545,143 @@
 
   <!-- ИНИЦИАЛИЗАЦИЯ CHART.JS И НАВИГАЦИЯ -->
   <script>
-    let state = {
-      sessionActive: false,
-      sessionKills: 0,
-      sessionDeaths: 0,
-      sessionMatches: 0
-    };
-
+    let globalStats = null;
+    let currentSession = null;
     let timerInterval = null;
     let chartInstance = null;
 
+    // AUTH GUARD
+    const token = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token');
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
       initChart();
+      loadData();
     });
+
+    async function loadData() {
+      try {
+        await loadGlobalStats();
+        await checkActiveSession();
+        calculateAndRender();
+      } catch (err) {
+        console.error("Ошибка загрузки данных:", err);
+      }
+    }
+
+    async function loadGlobalStats() {
+      const { data, error } = await window.supabase
+        .from('hunter_profile')
+        .select('*')
+        .single();
+      if (error) throw error;
+      globalStats = data;
+    }
+
+    async function checkActiveSession() {
+      const { data } = await window.supabase
+        .from('sessions')
+        .select('*')
+        .eq('is_active', true)
+        .order('start_time', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data) {
+        currentSession = data;
+        updateHuntUI(true);
+        startTimer(new Date(currentSession.start_time));
+        loadSessionMatches();
+      } else {
+        currentSession = null;
+        updateHuntUI(false);
+      }
+    }
+
+    async function loadSessionMatches() {
+      if (!currentSession) return;
+      const { data } = await window.supabase
+        .from('matches')
+        .select('*')
+        .eq('session_id', currentSession.id)
+        .order('created_at', { ascending: true });
+
+      if (data && chartInstance) {
+        let rollingKills = 0;
+        let rollingDeaths = 0;
+        const kdData = [0];
+        
+        data.forEach(m => {
+          rollingKills += m.kills;
+          rollingDeaths += m.deaths;
+          kdData.push(rollingDeaths > 0 ? (rollingKills / rollingDeaths) : rollingKills);
+        });
+
+        chartInstance.data.labels = ['Старт', ...data.map((_, i) => `Матч ${i+1}`)];
+        chartInstance.data.datasets[0].data = kdData;
+        chartInstance.update();
+      }
+    }
+
+    function calculateAndRender() {
+      if (!globalStats) return;
+
+      const tk = globalStats.total_kills;
+      const td = globalStats.total_deaths;
+      const tm = globalStats.total_matches;
+      const targetKD = globalStats.target_kd || 2.00;
+
+      const currentKD = tk / td;
+      document.getElementById('total-kd').innerText = currentKD.toFixed(2);
+      document.getElementById('total-kills').innerText = tk.toLocaleString();
+      document.getElementById('total-deaths').innerText = td.toLocaleString();
+      document.getElementById('total-matches').innerText = tm.toLocaleString();
+
+      const startKD = 1.72;
+      const endKD = 2.00;
+      let progress = ((currentKD - startKD) / (endKD - startKD)) * 100;
+      progress = Math.max(0, Math.min(100, progress));
+      document.getElementById('liquid-bar').style.width = progress.toFixed(2) + '%';
+      document.getElementById('progress-percent').innerText = currentKD.toFixed(2);
+      document.getElementById('progress-percent').style.left = progress.toFixed(2) + '%';
+
+      if (currentSession) {
+        document.getElementById('session-kills').innerText = currentSession.kills;
+        document.getElementById('session-deaths').innerText = currentSession.deaths;
+        document.getElementById('session-matches').innerText = currentSession.matches_count;
+        const skd = currentSession.deaths > 0 ? currentSession.kills / currentSession.deaths : currentSession.kills;
+        document.getElementById('session-kd').innerText = skd.toFixed(2);
+
+        const skpg = currentSession.matches_count > 0 ? currentSession.kills / currentSession.matches_count : 0;
+        const kpgElem = document.getElementById('session-kpg');
+        if (kpgElem) kpgElem.innerText = skpg.toFixed(2);
+
+        // Расчет прироста KD (live-delta)
+        const oldKD = (globalStats.total_kills - currentSession.kills) / Math.max(1, globalStats.total_deaths - currentSession.deaths);
+        const delta = (globalStats.total_kills / globalStats.total_deaths) - oldKD;
+        const deltaElem = document.getElementById('live-delta');
+        if (deltaElem) {
+          const sign = delta > 0 ? '+' : (delta < 0 ? '' : '+');
+          deltaElem.innerText = `${sign}${delta.toFixed(5)} KD`;
+          
+          deltaElem.classList.remove('text-gray-400', 'text-[#81c784]', 'text-[#ffb4ab]');
+          if (delta > 0) {
+            deltaElem.classList.add('text-[#81c784]'); // Приятно зеленый
+          } else if (delta < 0) {
+            deltaElem.classList.add('text-[#ffb4ab]'); // Приятно красный
+          } else {
+            deltaElem.classList.add('text-gray-400'); // Серый
+          }
+        }
+      }
+
+      const microKD = Math.round(currentKD * 100) / 100 + 0.01;
+      document.getElementById('micro-target-kd').innerText = microKD.toFixed(2);
+      document.getElementById('micro-target-kills').innerText = Math.max(0, Math.ceil((td * microKD) - tk));
+      document.getElementById('global-target-kills').innerText = Math.max(0, Math.ceil((td * targetKD) - tk));
+    }
 
     function initChart() {
       const ctx = document.getElementById('sessionChart').getContext('2d');
@@ -597,32 +725,63 @@
       input.value = val + amount; // Позволяем вводить отрицательные значения для коррекции!
     }
 
-    function toggleHuntSession() {
-      state.sessionActive = !state.sessionActive;
+    async function toggleHuntSession() {
+      if (!currentSession) {
+        const { data, error } = await window.supabase
+          .from('sessions')
+          .insert([{ is_active: true, start_time: new Date().toISOString() }])
+          .select()
+          .single();
+        
+        if (error) return alert("Ошибка старта сессии");
+        currentSession = data;
+        updateHuntUI(true);
+        startTimer(new Date(currentSession.start_time));
+      } else {
+        // Завершение сессии (здесь можно добавить ваш попап с итогами)
+        const { error } = await window.supabase
+          .from('sessions')
+          .update({ is_active: false, end_time: new Date().toISOString() })
+          .eq('id', currentSession.id);
+
+        if (error) return alert("Ошибка завершения сессии");
+        currentSession = null;
+        updateHuntUI(false);
+        stopTimer();
+        loadData();
+      }
+    }
+
+    function updateHuntUI(active) {
       const statusText = document.getElementById('hunt-status-text');
       const btn = document.getElementById('btn-toggle-hunt');
       const timerDisplay = document.getElementById('timer-display');
-
-      if (state.sessionActive) {
+      if (active) {
         statusText.textContent = "ЗАВЕРШИТЬ ОХОТУ";
         btn.classList.add('active');
-        let elapsed = 0;
         timerDisplay.classList.add('text-error');
-        clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-          elapsed++;
-          const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-          const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-          const s = String(elapsed % 60).padStart(2, '0');
-          timerDisplay.textContent = `${h}:${m}:${s}`;
-        }, 1000);
       } else {
         statusText.textContent = "НАЧАТЬ ОХОТУ";
         btn.classList.remove('active');
-        clearInterval(timerInterval);
         timerDisplay.classList.remove('text-error');
         timerDisplay.textContent = "00:00:00";
       }
+    }
+
+    function startTimer(startTime) {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        const now = new Date();
+        const elapsed = Math.floor((now - startTime) / 1000);
+        const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+        const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+        const s = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('timer-display').textContent = `${h}:${m}:${s}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
     }
 
     /* HOLD TO DELETE MATCH LOGIC */
@@ -632,31 +791,55 @@
     const HOLD_DURATION = 3000;
 
     function startHold() {
+      if (!currentSession) {
+        alert("Сначала начни охоту!");
+        return;
+      }
+
+      holdStartTime = Date.now();
       const k = parseInt(document.getElementById('input-kills').value) || 0;
       const d = parseInt(document.getElementById('input-deaths').value) || 0;
 
       if (k === 0 && d === 0) {
-        holdStartTime = Date.now();
         const fillElem = document.getElementById('hold-fill');
         const recordTxt = document.getElementById('record-txt');
         
-        recordTxt.textContent = "УДАЛЯЕМ 1 КАТКУ";
-        recordTxt.style.color = "#ffdad6";
+        if (recordTxt) {
+          recordTxt.textContent = "УДАЛЯЕМ 1 КАТКУ";
+          recordTxt.style.color = "#ffdad6";
+        }
 
+        clearInterval(holdProgressInterval);
         holdProgressInterval = setInterval(() => {
           const elapsed = Date.now() - holdStartTime;
           const pct = Math.min(100, (elapsed / HOLD_DURATION) * 100);
-          fillElem.style.width = pct + '%';
+          if (fillElem) fillElem.style.width = pct + '%';
         }, 30);
 
-        holdTimer = setTimeout(() => {
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(async () => {
           cancelHold();
-          alert("1 катка списана!");
+          if (currentSession && currentSession.matches_count > 0) {
+            await window.supabase
+              .from('sessions')
+              .update({ matches_count: currentSession.matches_count - 1 })
+              .eq('id', currentSession.id);
+
+            await window.supabase
+              .from('hunter_profile')
+              .update({ total_matches: globalStats.total_matches - 1 })
+              .eq('id', globalStats.id);
+
+            alert("1 катка списана!");
+            await loadData();
+          }
         }, HOLD_DURATION);
       }
     }
 
     function endHold() {
+      if (!currentSession || holdStartTime === 0) return;
+
       const elapsed = Date.now() - holdStartTime;
       if (elapsed < HOLD_DURATION) {
         cancelHold();
@@ -667,29 +850,69 @@
     function cancelHold() {
       clearTimeout(holdTimer);
       clearInterval(holdProgressInterval);
-      document.getElementById('hold-fill').style.width = '0%';
+      holdStartTime = 0;
+
+      const fillElem = document.getElementById('hold-fill');
+      if (fillElem) {
+        fillElem.style.transition = 'none';
+        fillElem.style.width = '0%';
+      }
       const recordTxt = document.getElementById('record-txt');
-      recordTxt.textContent = "ЗАПИСАТЬ МАТЧ";
-      recordTxt.style.color = "#d9c39c";
+      if (recordTxt) {
+        recordTxt.textContent = "ЗАПИСАТЬ МАТЧ";
+        recordTxt.style.color = "#d9c39c";
+      }
     }
 
-    function recordMatch() {
-      if (!state.sessionActive) {
-        alert("Сначала начни охоту (кнопка 'НАЧАТЬ ОХОТУ')!");
-        return;
-      }
+    async function recordMatch() {
+      if (!currentSession) return alert("Сначала начни охоту!");
+      const k = parseInt(document.getElementById('input-kills').value) || 0;
+      const d = parseInt(document.getElementById('input-deaths').value) || 0;
+
+      // 1. Запись матча
+      const { error: matchErr } = await window.supabase
+        .from('matches')
+        .insert([{ session_id: currentSession.id, kills: k, deaths: d }]);
+      
+      if (matchErr) return alert("Ошибка записи матча");
+
+      // 2. Обновление сессии
+      const newKills = currentSession.kills + k;
+      const newDeaths = currentSession.deaths + d;
+      const newMatches = currentSession.matches_count + (k === 0 && d === 0 ? 0 : 1);
+      
+      const { data: updatedSession, error: sessErr } = await window.supabase
+        .from('sessions')
+        .update({ kills: newKills, deaths: newDeaths, matches_count: newMatches })
+        .eq('id', currentSession.id)
+        .select()
+        .single();
+      
+      if (sessErr) return alert("Ошибка обновления сессии");
+      currentSession = updatedSession;
+
+      // 3. Обновление профиля
+      const { error: profErr } = await window.supabase
+        .from('hunter_profile')
+        .update({
+          total_kills: globalStats.total_kills + k,
+          total_deaths: globalStats.total_deaths + d,
+          total_matches: globalStats.total_matches + (k === 0 && d === 0 ? 0 : 1)
+        })
+        .eq('id', globalStats.id);
+      
+      if (profErr) return alert("Ошибка обновления профиля");
+
       document.getElementById('input-kills').value = 0;
       document.getElementById('input-deaths').value = 0;
+      await loadGlobalStats();
+      calculateAndRender();
+      loadSessionMatches();
     }
 
     function goToAnalytics(event) {
       if (event) event.preventDefault();
-      const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
-      if (isLoggedIn) {
-        window.location.href = 'admin.html';
-      } else {
-        window.location.href = 'index.html';
-      }
+      window.location.href = 'admin.html';
     }
   </script>
 
