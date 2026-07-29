@@ -181,7 +181,6 @@
     color: #141313;
     border-color: #e6c885;
   }
-
   .btn-record {
     width: 170px !important;
     height: 44px;
@@ -316,10 +315,30 @@
   }
 
   .progress-badge {
-    position: absolute; top: -3px; transform: translateX(-50%);
-    font-family: 'Special Elite', monospace; font-size: 13px; color: #dac493;
-    text-shadow: 0 0 10px rgba(0,0,0,0.9), 0 2px 4px #000000; pointer-events: none;
-    transition: left 0.7s cubic-bezier(0.25, 1, 0.5, 1); z-index: 30; white-space: nowrap;
+    position: absolute;
+    top: -30px;
+    transform: translateX(-50%);
+    background: #181615;
+    color: #dac493;
+    border: 1px solid #dac493;
+    box-shadow: 0 0 8px rgba(218,196,147,0.4);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: 'Courier Prime', monospace;
+    transition: left 1s ease-out;
+    z-index: 10;
+  }
+  .progress-badge::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px 5px 0;
+    border-style: solid;
+    border-color: #dac493 transparent transparent transparent;
   }
 
   /* ЕДИНЫЕ ИДЕНТИЧНЫЕ СТРОКИ СТАТИСТИКИ (СТАНДАРТНЫЕ: КОЛОНКИ 1 И 3) */
@@ -370,19 +389,20 @@
       <!-- MIDDLE CARD: LIVE TIMER DISPLAY -->
       <div class="victorian-card rounded-sm p-4 w-[220px] h-[82px] flex flex-col items-center justify-center gap-0.5 shadow-xl">
         <span class="font-forum text-[10px] font-bold text-[#dac493] tracking-widest uppercase">ВРЕМЯ В БОЮ</span>
-        <span id="timer-display" class="font-courier text-2xl text-[#dac493] drop-shadow-[0_0_5px_rgba(218,196,147,0.3)] tracking-widest transition-all">00:00:00</span>
+        <span id="timer-display" class="font-garamond text-3xl text-[#dac493] drop-shadow-[0_0_5px_rgba(218,196,147,0.3)] tracking-[4px] transition-all pt-1">00:00:00</span>
       </div>
 
-      <!-- RIGHT CARD: INPUT STEPPERS & RECORD (Идеальное выравнивание по нижней границе интерактивных элементов) -->
-      <div id="input-controls-section" class="victorian-card rounded-sm px-4 py-3 w-[510px] h-[82px] flex items-end justify-between shadow-xl relative z-50 transition-all opacity-30 pointer-events-none">
+      <!-- RIGHT CARD: INPUTS & RECORD (Идеальное выравнивание по нижней границе интерактивных элементов) -->
+      <div id="input-controls-section" class="victorian-card rounded-sm px-4 py-3 w-[660px] h-[82px] flex items-end justify-between shadow-xl relative z-50 transition-all opacity-30 pointer-events-none">
         
-        <div class="flex items-end gap-4">
+        <!-- Left Side: Inputs and Submit -->
+        <div class="flex items-end gap-6">
           <!-- Kills -->
           <div class="flex flex-col items-center gap-1">
             <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">УБИЙСТВА</span>
             <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
               <button onclick="adjustInput('kills', -1)" class="stepper-btn">-</button>
-              <input id="input-kills" type="number" value="0" class="stepper-input" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
+              <input id="input-kills" type="number" value="0" min="0" class="stepper-input w-[40px] text-center" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
               <button onclick="adjustInput('kills', 1)" class="stepper-btn">+</button>
             </div>
           </div>
@@ -392,38 +412,29 @@
             <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">СМЕРТИ</span>
             <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
               <button onclick="adjustInput('deaths', -1)" class="stepper-btn">-</button>
-              <input id="input-deaths" type="number" value="0" class="stepper-input" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
+              <input id="input-deaths" type="number" value="0" min="0" class="stepper-input w-[40px] text-center" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
               <button onclick="adjustInput('deaths', 1)" class="stepper-btn">+</button>
             </div>
           </div>
-        </div>
 
-        <!-- Submit Action + Справка "?" на одной линии с инпутами (события onmousedown/touch сохранены) -->
-        <div class="flex items-center gap-2 h-[44px]">
-          <button id="btn-record" class="btn-record"
-                  onmousedown="startHold()" onmouseup="endHold()" onmouseleave="cancelHold()"
-                  ontouchstart="startHold()" ontouchend="endHold()">
-            <div class="btn-hold-fill" id="hold-fill"></div>
+          <!-- Submit Button -->
+          <button id="btn-record" class="btn-record ml-2" onclick="recordMatch()">
             <span id="record-txt" style="position: relative; z-index: 2;">ЗАПИСАТЬ МАТЧ</span>
           </button>
-
-          <div class="info-badge relative">?
-            <div class="tooltip-card">
-              <div class="font-forum text-xs text-tertiary tracking-wider border-b border-surface-variant pb-1.5 uppercase">Правила Записи и Коррекции</div>
-              <div class="font-garamond text-xs text-on-surface-variant leading-snug">🟢 <b>Сыгранный матч:</b> Введите числа -> добавляет К/Д и <b>+1 матч</b>.</div>
-              <div class="font-garamond text-xs text-on-surface-variant leading-snug">🟡 <b>Исправление ошибки:</b> Введите отрицательное число -> меняет К/Д без изменения каток.</div>
-              <div class="font-garamond text-xs text-on-surface-variant leading-snug">🔴 <b>Списать 1 катку:</b> Выставьте <b>0</b> киллов и <b>0</b> смертей, затем <b>зажмите кнопку на 3 секунды</b>.</div>
-            </div>
-          </div>
         </div>
+
+        <!-- Editor Button -->
+        <button onclick="openEditorModal()" class="w-[140px] bg-[#181615] border border-[#dac493]/30 hover:border-[#dac493] text-[#dac493] font-forum text-[11px] font-bold h-[44px] rounded-sm transition-all uppercase tracking-[2px] shadow-md leading-[1.2]" style="padding: 0 4px;">
+          РЕДАКТОР
+        </button>
 
       </div>
 
     </section>
 
     <!-- PROGRESS BAR SECTION WITH HEADER -->
-    <section class="w-full flex flex-col gap-1 relative z-10 shrink-0 px-2">
-      <div class="font-forum text-sm md:text-base font-bold text-tertiary tracking-[4px] uppercase text-center mb-1">ПРОГРЕСС РОСТА KD</div>
+    <section class="w-full flex flex-col gap-1 relative z-10 shrink-0 px-2 mt-4">
+      <div class="font-forum text-sm md:text-base font-bold text-[#dac493] tracking-[4px] uppercase text-center mb-1 drop-shadow-[0_2px_4px_rgba(0,0,0,1)]" style="text-shadow: 2px 2px 4px #000000, 0 0 10px #000000, 0 0 20px #000000;">ПРОГРЕСС РОСТА KD</div>
       <div class="vial-assembly">
         <div id="progress-percent" class="progress-badge" style="left: 0%;">0.00</div>
         <div class="cap-left"></div>
@@ -451,30 +462,30 @@
         <div class="victorian-card p-[18px] rounded-sm flex flex-col justify-start h-full min-h-0">
           
           <div>
-            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Промежуточная цель (+0.01)</h3>
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Промежуточная цель</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Ближайшая цель</span><span id="micro-target-kd" class="stat-val">0.00</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось убийств</span><span id="micro-target-kills" class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Честный прогноз матчей</span><span id="micro-target-matches" class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось сессий</span><span id="micro-target-sessions" class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Примерная дата</span><span id="micro-target-date" class="stat-val">--.--.----</span></div>
+            <div class="stat-row"><span class="stat-label">Ближайшая цель по KD</span><span id="micro-target-kd" class="stat-val">0.00</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось убийств до цели</span><span id="micro-target-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось матчей до цели</span><span id="micro-target-matches" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось стримов до цели</span><span id="micro-target-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Примерная дата достижения</span><span id="micro-target-date" class="stat-val">--.--.----</span></div>
           </div>
           
           <div class="mt-6">
-            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Глобальная цель 2.0 KD</h3>
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Финальная цель 2.0 KD</h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Фрагов до цели 2.0</span><span id="global-target-kills" class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось матчей до 2.0</span><span id="global-target-matches" class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Осталось сессий до 2.0</span><span id="global-target-sessions" class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Дата достижения цели</span><span id="global-target-date" class="stat-val">--.--.----</span></div>
+            <div class="stat-row"><span class="stat-label">Чистый дефицит киллов</span><span id="global-target-kills" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось матчей до цели</span><span id="global-target-matches" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось стримов до цели</span><span id="global-target-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Примерная дата достижения</span><span id="global-target-date" class="stat-val">--.--.----</span></div>
           </div>
 
           <div class="mt-6">
-            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Идеальный сценарий</h3>
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Оптимистичный прогноз <span title="Сценарий достижения цели, если стример всегда будет играть на уровне своего рекорда KD." class="cursor-help text-[11px] font-sans border border-[#dac493] text-[#dac493] rounded-full w-[15px] h-[15px] inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity ml-1.5 align-middle mb-[2px]">?</span></h3>
             <div class="gradient-line mb-2.5"></div>
-            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Матчей)</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Сессий)</span><span class="stat-val">0</span></div>
-            <div class="stat-row"><span class="stat-label">Идеальный сценарий (Дата)</span><span class="stat-val">--.--.----</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось матчей</span><span id="ideal-matches" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Осталось сессий</span><span id="ideal-sessions" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Дата финиша</span><span id="ideal-date" class="stat-val">--.--.----</span></div>
           </div>
 
         </div>
@@ -500,19 +511,16 @@
           <div class="stat-row text-[17px]"><span class="stat-label">KD за сегодня</span><span id="session-kd" class="stat-val text-[19px]">0.00</span></div>
           <div class="stat-row text-[17px]"><span class="stat-label">KPG за сегодня</span><span id="session-kpg" class="stat-val text-[19px]">0.00</span></div>
         </div>
-
         <!-- ЖИВОЙ ГРАФИК СЕССИИ (РАСТЯГИВАЕТСЯ НА ОСТАВШУЮСЯ ВЫСОТУ И ВЫРАВНИВАЕТ НИЗ h-full) -->
         <div class="victorian-card p-[18px] rounded-sm flex flex-col flex-grow justify-start min-h-0">
           <div class="flex justify-between items-center pb-1 shrink-0">
             <span class="font-forum text-[11px] text-tertiary font-bold uppercase tracking-wider">Динамика эффективности в бою</span>
-            <span class="font-garamond text-[11px] text-gray-500">Live Chart</span>
           </div>
           <div class="gradient-line mb-2 shrink-0"></div>
           <div class="w-full flex-grow relative min-h-0">
             <canvas id="sessionChart"></canvas>
           </div>
         </div>
-
       </div>
 
       <!-- КОЛОНКА 3 (ПРАВАЯ): ИТОГИ И СТАТИСТИКА ЧЕЛЛЕНДЖА (ВЫСОТА h-full) -->
@@ -539,7 +547,7 @@
             <div class="stat-row"><span class="stat-label">Всего сессий</span><span id="total-sessions" class="stat-val">0</span></div>
             <div class="stat-row"><span class="stat-label">Средний KPG</span><span id="avg-kpg" class="stat-val">0.00</span></div>
             <!-- Чистая цифра справа по правилам TYPOGRAPHY.md -->
-            <div class="stat-row"><span class="stat-label">Стрик дней KD > 2.0 (дней)</span><span id="kd-streak" class="stat-val">0</span></div>
+            <div class="stat-row"><span class="stat-label">Стрик дней в которых KD>2</span><span id="kd-streak" class="stat-val">0</span></div>
           </div>
 
         </div>
@@ -649,7 +657,7 @@
       let progress = ((currentKD - startKD) / (endKD - startKD)) * 100;
       progress = Math.max(0, Math.min(100, progress));
       document.getElementById('liquid-bar').style.width = progress.toFixed(2) + '%';
-      document.getElementById('progress-percent').innerText = currentKD.toFixed(2);
+      document.getElementById('progress-percent').innerText = progress.toFixed(1) + '%';
       document.getElementById('progress-percent').style.left = progress.toFixed(2) + '%';
 
       if (currentSession) {
@@ -688,6 +696,12 @@
       document.getElementById('global-target-kills').innerText = Math.max(0, Math.ceil((td * targetKD) - tk));
     }
 
+    function adjustInput(field, amount) {
+      const input = document.getElementById('input-' + field);
+      let val = parseInt(input.value) || 0;
+      input.value = Math.max(0, val + amount); // Не уходим в минус
+    }
+
     function initChart() {
       const ctx = document.getElementById('sessionChart').getContext('2d');
       chartInstance = new Chart(ctx, {
@@ -724,16 +738,8 @@
       });
     }
 
-    function adjustInput(field, amount) {
-      const input = document.getElementById('input-' + field);
-      let val = parseInt(input.value) || 0;
-      input.value = val + amount; // Позволяем вводить отрицательные значения для коррекции!
-    }
-
     const CHARACTERS = [
-      { id: 'fifield', img: 'fifield.png', greeting: 'Ну как твоё настроение, сынок?' },
-      { id: 'manus', img: 'manus.jpg', greeting: 'Готов очищать болота от скверны?' },
-      { id: 'billy', img: 'billy.gif', greeting: 'Сегодня твой день, охотник!' }
+      { id: 'fifield', img: 'fifield.png', greeting: 'Алоха, вижу лоха!' }
     ];
 
     function getRandomCharacter() {
@@ -931,7 +937,7 @@
       if (active) {
         statusText.textContent = "ЗАВЕРШИТЬ ОХОТУ";
         btn.classList.add('active');
-        timerDisplay.classList.add('text-[#ffb4ab]', 'drop-shadow-[0_0_8px_rgba(255,107,107,0.6)]');
+        timerDisplay.classList.add('text-[#e5e2e1]', 'drop-shadow-[0_0_8px_rgba(229,226,225,0.6)]');
         timerDisplay.classList.remove('text-[#dac493]', 'drop-shadow-[0_0_5px_rgba(218,196,147,0.3)]');
         
         if (inputSection) {
@@ -940,7 +946,7 @@
       } else {
         statusText.textContent = "НАЧАТЬ ОХОТУ";
         btn.classList.remove('active');
-        timerDisplay.classList.remove('text-[#ffb4ab]', 'drop-shadow-[0_0_8px_rgba(255,107,107,0.6)]');
+        timerDisplay.classList.remove('text-[#e5e2e1]', 'drop-shadow-[0_0_8px_rgba(229,226,225,0.6)]');
         timerDisplay.classList.add('text-[#dac493]', 'drop-shadow-[0_0_5px_rgba(218,196,147,0.3)]');
         timerDisplay.textContent = "00:00:00";
         
@@ -967,89 +973,16 @@
     }
 
     /* HOLD TO DELETE MATCH LOGIC */
-    let holdTimer = null;
-    let holdProgressInterval = null;
-    let holdStartTime = 0;
-    const HOLD_DURATION = 3000;
-
-    function startHold() {
-      if (!currentSession) {
-        alert("Сначала начни охоту!");
-        return;
-      }
-
-      holdStartTime = Date.now();
-      const k = parseInt(document.getElementById('input-kills').value) || 0;
-      const d = parseInt(document.getElementById('input-deaths').value) || 0;
-
-      if (k === 0 && d === 0) {
-        const fillElem = document.getElementById('hold-fill');
-        const recordTxt = document.getElementById('record-txt');
-        
-        if (recordTxt) {
-          recordTxt.textContent = "УДАЛЯЕМ 1 КАТКУ";
-          recordTxt.style.color = "#ffdad6";
-        }
-
-        clearInterval(holdProgressInterval);
-        holdProgressInterval = setInterval(() => {
-          const elapsed = Date.now() - holdStartTime;
-          const pct = Math.min(100, (elapsed / HOLD_DURATION) * 100);
-          if (fillElem) fillElem.style.width = pct + '%';
-        }, 30);
-
-        clearTimeout(holdTimer);
-        holdTimer = setTimeout(async () => {
-          cancelHold();
-          if (currentSession && currentSession.matches_count > 0) {
-            await window.supabase
-              .from('sessions')
-              .update({ matches_count: currentSession.matches_count - 1 })
-              .eq('id', currentSession.id);
-
-            await window.supabase
-              .from('hunter_profile')
-              .update({ total_matches: globalStats.total_matches - 1 })
-              .eq('id', globalStats.id);
-
-            alert("1 катка списана!");
-            await loadData();
-          }
-        }, HOLD_DURATION);
-      }
-    }
-
-    function endHold() {
-      if (!currentSession || holdStartTime === 0) return;
-
-      const elapsed = Date.now() - holdStartTime;
-      if (elapsed < HOLD_DURATION) {
-        cancelHold();
-        recordMatch();
-      }
-    }
-
-    function cancelHold() {
-      clearTimeout(holdTimer);
-      clearInterval(holdProgressInterval);
-      holdStartTime = 0;
-
-      const fillElem = document.getElementById('hold-fill');
-      if (fillElem) {
-        fillElem.style.transition = 'none';
-        fillElem.style.width = '0%';
-      }
-      const recordTxt = document.getElementById('record-txt');
-      if (recordTxt) {
-        recordTxt.textContent = "ЗАПИСАТЬ МАТЧ";
-        recordTxt.style.color = "#d9c39c";
-      }
-    }
-
     async function recordMatch() {
       if (!currentSession) return alert("Сначала начни охоту!");
       const k = parseInt(document.getElementById('input-kills').value) || 0;
       const d = parseInt(document.getElementById('input-deaths').value) || 0;
+
+      if (k === 0 && d === 0) {
+        document.getElementById('input-kills').value = '';
+        document.getElementById('input-deaths').value = '';
+        return; 
+      }
 
       // 1. Запись матча
       const { error: matchErr } = await window.supabase
@@ -1061,7 +994,7 @@
       // 2. Обновление сессии
       const newKills = currentSession.kills + k;
       const newDeaths = currentSession.deaths + d;
-      const newMatches = currentSession.matches_count + (k === 0 && d === 0 ? 0 : 1);
+      const newMatches = currentSession.matches_count + 1;
       
       const { data: updatedSession, error: sessErr } = await window.supabase
         .from('sessions')
@@ -1079,7 +1012,7 @@
         .update({
           total_kills: globalStats.total_kills + k,
           total_deaths: globalStats.total_deaths + d,
-          total_matches: globalStats.total_matches + (k === 0 && d === 0 ? 0 : 1)
+          total_matches: globalStats.total_matches + 1
         })
         .eq('id', globalStats.id);
       
@@ -1092,11 +1025,207 @@
       loadSessionMatches();
     }
 
+    let editorMatches = [];
+
+    async function openEditorModal() {
+      if (!currentSession) return alert("Сессия не активна!");
+      const modal = document.getElementById('editor-modal');
+      const content = document.getElementById('editor-modal-content');
+      
+      modal.classList.remove('hidden');
+      void modal.offsetWidth;
+      modal.classList.remove('opacity-0');
+      content.classList.remove('scale-95');
+      content.classList.add('scale-100');
+      
+      await renderEditorTable();
+    }
+
+    function closeEditorModal() {
+      const modal = document.getElementById('editor-modal');
+      const content = document.getElementById('editor-modal-content');
+      modal.classList.add('opacity-0');
+      content.classList.remove('scale-100');
+      content.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    async function renderEditorTable() {
+      const container = document.getElementById('editor-table-container');
+      
+      const { data, error } = await window.supabase
+        .from('matches')
+        .select('*')
+        .eq('session_id', currentSession.id)
+        .order('created_at', { ascending: true });
+        
+      if (error) {
+        container.innerHTML = '<div class="text-center text-red-500 font-garamond text-sm">Ошибка загрузки</div>';
+        return;
+      }
+      
+      editorMatches = data;
+      
+      if (editorMatches.length === 0) {
+        container.innerHTML = '<div class="text-center text-[#dac493]/50 font-garamond text-sm">В этой сессии еще нет матчей.</div>';
+        return;
+      }
+
+      let html = `<table class="w-full text-left font-garamond text-sm text-[#e5e2e1] border-collapse">
+        <thead>
+          <tr class="border-b border-[#dac493]/20">
+            <th class="py-2 font-forum text-[#dac493]/70 font-normal uppercase tracking-wider">#</th>
+            <th class="py-2 font-forum text-[#dac493]/70 font-normal uppercase tracking-wider">Время</th>
+            <th class="py-2 font-forum text-[#dac493]/70 font-normal uppercase tracking-wider text-center">Киллы</th>
+            <th class="py-2 font-forum text-[#dac493]/70 font-normal uppercase tracking-wider text-center">Смерти</th>
+            <th class="py-2 font-forum text-[#dac493]/70 font-normal uppercase tracking-wider text-right">Действия</th>
+          </tr>
+        </thead>
+        <tbody>`;
+        
+      editorMatches.forEach((m, idx) => {
+        const time = new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        html += `<tr class="border-b border-[#35312c]">
+          <td class="py-2 text-[#dac493]">Матч ${idx + 1}</td>
+          <td class="py-2 text-[#8e9192]">${time}</td>
+          <td class="py-2 text-center">
+            <input type="number" id="edit-k-${m.id}" value="${m.kills}" class="w-12 bg-black/50 border border-[#3d3935] text-center text-[#e5e2e1] rounded-sm focus:border-[#dac493] outline-none">
+          </td>
+          <td class="py-2 text-center">
+            <input type="number" id="edit-d-${m.id}" value="${m.deaths}" class="w-12 bg-black/50 border border-[#3d3935] text-center text-[#e5e2e1] rounded-sm focus:border-[#dac493] outline-none">
+          </td>
+          <td class="py-2 text-right">
+            <button id="save-btn-${m.id}" onclick="saveMatchEdit('${m.id}', ${m.kills}, ${m.deaths})" class="text-green-500 hover:text-green-400 font-bold p-1 mx-1 w-12 text-center" title="Сохранить">✓</button>
+            <button onclick="deleteMatch('${m.id}', ${m.kills}, ${m.deaths})" class="text-red-500 hover:text-red-400 font-bold p-1 mx-1" title="Удалить">✕</button>
+          </td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    async function saveMatchEdit(matchId, oldK, oldD) {
+      const newK = parseInt(document.getElementById(`edit-k-${matchId}`).value) || 0;
+      const newD = parseInt(document.getElementById(`edit-d-${matchId}`).value) || 0;
+      
+      if (newK === oldK && newD === oldD) return; 
+
+      const deltaK = newK - oldK;
+      const deltaD = newD - oldD;
+
+      const { error: matchErr } = await window.supabase
+        .from('matches')
+        .update({ kills: newK, deaths: newD })
+        .eq('id', matchId);
+        
+      if (matchErr) return alert("Ошибка сохранения матча");
+
+      const { data: updatedSession, error: sessErr } = await window.supabase
+        .from('sessions')
+        .update({ 
+          kills: currentSession.kills + deltaK, 
+          deaths: currentSession.deaths + deltaD 
+        })
+        .eq('id', currentSession.id)
+        .select()
+        .single();
+        
+      if (sessErr) return alert("Ошибка обновления сессии");
+      currentSession = updatedSession;
+
+      await window.supabase
+        .from('hunter_profile')
+        .update({
+          total_kills: globalStats.total_kills + deltaK,
+          total_deaths: globalStats.total_deaths + deltaD
+        })
+        .eq('id', globalStats.id);
+
+      await loadGlobalStats();
+      calculateAndRender();
+      loadSessionMatches();
+      await renderEditorTable();
+
+      const btn = document.getElementById(`save-btn-${matchId}`);
+      if (btn) {
+        btn.innerHTML = 'СОХРАНЕНО!';
+        btn.style.color = '#85e0a3';
+        btn.classList.add('text-[9px]');
+        setTimeout(() => {
+          btn.innerHTML = '✓';
+          btn.style.color = '';
+          btn.classList.remove('text-[9px]');
+        }, 1500);
+      }
+    }
+
+    async function deleteMatch(matchId, k, d) {
+      if (!confirm("Вы уверены, что хотите удалить этот матч?")) return;
+
+      const { error: matchErr } = await window.supabase
+        .from('matches')
+        .delete()
+        .eq('id', matchId);
+        
+      if (matchErr) return alert("Ошибка удаления матча");
+
+      const { data: updatedSession, error: sessErr } = await window.supabase
+        .from('sessions')
+        .update({ 
+          kills: currentSession.kills - k, 
+          deaths: currentSession.deaths - d,
+          matches_count: currentSession.matches_count - 1
+        })
+        .eq('id', currentSession.id)
+        .select()
+        .single();
+        
+      if (sessErr) return alert("Ошибка обновления сессии");
+      currentSession = updatedSession;
+
+      await window.supabase
+        .from('hunter_profile')
+        .update({
+          total_kills: globalStats.total_kills - k,
+          total_deaths: globalStats.total_deaths - d,
+          total_matches: globalStats.total_matches - 1
+        })
+        .eq('id', globalStats.id);
+
+      await loadGlobalStats();
+      calculateAndRender();
+      loadSessionMatches();
+      await renderEditorTable();
+    }
+
+
+
     function goToAnalytics(event) {
       if (event) event.preventDefault();
       window.location.href = 'admin.html';
     }
   </script>
+
+  <!-- EDITOR MODAL -->
+  <div id="editor-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300" style="background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px);">
+    <div class="relative w-[500px] max-h-[80vh] flex flex-col bg-[#1c1917] border border-[#dac493]/40 rounded-sm shadow-[0_0_40px_rgba(0,0,0,1)] transform scale-95 transition-transform duration-300" id="editor-modal-content">
+      
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-[#dac493] to-transparent opacity-50"></div>
+
+      <button onclick="closeEditorModal()" class="absolute top-4 right-4 text-[#dac493]/50 hover:text-[#dac493] transition-colors focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+
+      <div class="p-6 pb-2">
+        <h2 class="font-forum text-xl text-[#f4ecd8] font-bold tracking-[2px] mb-2 uppercase">Редактор истории</h2>
+        <p class="font-garamond text-[13px] text-[#dac493]/70 mb-4">Измените результаты сыгранных матчей или удалите их. Статистика пересчитается автоматически.</p>
+      </div>
+
+      <div class="overflow-y-auto px-6 pb-6 custom-scrollbar flex-1" id="editor-table-container">
+        <!-- JS fills this -->
+      </div>
+    </div>
+  </div>
 
   <!-- START HUNT POPUP -->
   <div id="start-hunt-popup" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300" style="background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px);">

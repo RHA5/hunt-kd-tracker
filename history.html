@@ -103,6 +103,16 @@
 
   .table-row { transition: background 0.2s; border-bottom: 1px solid rgba(87, 82, 74, 0.3); }
   .table-row:hover { background: rgba(218, 196, 147, 0.05); }
+
+  /* Скрываем стрелочки у input type="number" */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
 </style>
 </head>
 
@@ -134,6 +144,7 @@
               <th class="table-th text-center">KD</th>
               <th class="table-th text-center">KPG</th>
               <th class="table-th pl-4">Комментарий</th>
+              <th id="th-actions" class="table-th text-right hidden">Действия</th>
             </tr>
           </thead>
           <tbody id="history-body" class="divide-y divide-[#35312c]">
@@ -147,6 +158,8 @@
   <script>
     document.addEventListener("DOMContentLoaded", loadHistory);
 
+    let sessionsData = [];
+
     async function loadHistory() {
       const { data, error } = await window.supabase
         .from('sessions')
@@ -154,6 +167,12 @@
         .order('start_time', { ascending: false });
 
       if (error) return console.error(error);
+      sessionsData = data;
+
+      const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
+      if (isLoggedIn) {
+        document.getElementById('th-actions').classList.remove('hidden');
+      }
 
       const tbody = document.getElementById('history-body');
       tbody.innerHTML = data.map(s => {
@@ -161,19 +180,106 @@
         const kpg = s.matches_count > 0 ? (s.kills / s.matches_count).toFixed(2) : '0.00';
         const kdClass = kd >= 2.0 ? 'cell-kd-positive' : 'cell-kd-negative';
         
+        const actionHtml = isLoggedIn ? `
+          <td class="py-3 text-right pr-2" id="action-cell-${s.id}">
+            <button onclick="editSession('${s.id}')" class="text-tertiary hover:text-white p-1">✏️</button>
+          </td>
+        ` : '';
+
         return `
-          <tr class="table-row">
+          <tr class="table-row" id="row-${s.id}">
             <td class="py-3 cell-date">${new Date(s.start_time).toLocaleString()}</td>
             <td class="py-3 cell-date">${s.end_time ? new Date(s.end_time).toLocaleString() : '---'}</td>
-            <td class="py-3 cell-num">${s.kills}</td>
-            <td class="py-3 cell-num">${s.deaths}</td>
-            <td class="py-3 cell-num">${s.matches_count}</td>
+            <td class="py-3 cell-num" id="k-${s.id}">${s.kills}</td>
+            <td class="py-3 cell-num" id="d-${s.id}">${s.deaths}</td>
+            <td class="py-3 cell-num" id="m-${s.id}">${s.matches_count}</td>
             <td class="py-3 ${kdClass}">${kd}</td>
             <td class="py-3 cell-num">${kpg}</td>
-            <td class="py-3 font-garamond text-sm text-on-surface-variant pl-4 opacity-70">${s.comment || ''}</td>
+            <td class="py-3 font-garamond text-sm text-on-surface-variant pl-4 opacity-70" id="c-${s.id}">${s.comment || ''}</td>
+            ${actionHtml}
           </tr>
         `;
       }).join('');
+    }
+
+    function editSession(id) {
+      const session = sessionsData.find(s => s.id === id);
+      if (!session) return;
+
+      document.getElementById(`k-${id}`).innerHTML = `<input type="number" id="input-k-${id}" value="${session.kills}" min="0" class="w-12 bg-black border border-[#57524a] text-center text-[#e5e2e1] rounded-sm outline-none">`;
+      document.getElementById(`d-${id}`).innerHTML = `<input type="number" id="input-d-${id}" value="${session.deaths}" min="0" class="w-12 bg-black border border-[#57524a] text-center text-[#e5e2e1] rounded-sm outline-none">`;
+      document.getElementById(`m-${id}`).innerHTML = `<input type="number" id="input-m-${id}" value="${session.matches_count}" min="0" class="w-12 bg-black border border-[#57524a] text-center text-[#e5e2e1] rounded-sm outline-none">`;
+      document.getElementById(`c-${id}`).innerHTML = `<input type="text" id="input-c-${id}" value="${session.comment || ''}" class="w-full bg-black border border-[#57524a] text-[#e5e2e1] px-2 rounded-sm outline-none">`;
+      
+      document.getElementById(`action-cell-${id}`).innerHTML = `
+        <button id="save-sess-${id}" onclick="saveSession('${id}', ${session.kills}, ${session.deaths})" class="text-green-500 hover:text-green-400 p-1 font-bold" title="Сохранить">✓</button>
+        <button onclick="deleteSession('${id}', ${session.kills}, ${session.deaths})" class="text-red-500 hover:text-red-400 p-1 font-bold" title="Удалить">✕</button>
+        <button onclick="loadHistory()" class="text-gray-400 hover:text-gray-200 p-1 ml-1" title="Отмена">↺</button>
+      `;
+    }
+
+    async function saveSession(id, oldK, oldD) {
+      const btn = document.getElementById(`save-sess-${id}`);
+      if(btn) btn.innerHTML = "⌛";
+
+      const newK = parseInt(document.getElementById(`input-k-${id}`).value) || 0;
+      const newD = parseInt(document.getElementById(`input-d-${id}`).value) || 0;
+      const newM = parseInt(document.getElementById(`input-m-${id}`).value) || 0;
+      const newC = document.getElementById(`input-c-${id}`).value || null;
+
+      const deltaK = newK - oldK;
+      const deltaD = newD - oldD;
+
+      const { error: sessErr } = await window.supabase
+        .from('sessions')
+        .update({ kills: newK, deaths: newD, matches_count: newM, comment: newC })
+        .eq('id', id);
+
+      if (sessErr) {
+        alert("Ошибка сохранения");
+        loadHistory();
+        return;
+      }
+
+      if (deltaK !== 0 || deltaD !== 0) {
+        const { data: profs } = await window.supabase.from('hunter_profile').select('*').limit(1);
+        if (profs && profs.length > 0) {
+          const p = profs[0];
+          await window.supabase.from('hunter_profile').update({
+            total_kills: Math.max(0, p.total_kills + deltaK),
+            total_deaths: Math.max(0, p.total_deaths + deltaD)
+          }).eq('id', p.id);
+        }
+      }
+
+      if(btn) {
+        btn.innerHTML = '✓';
+        btn.classList.add('text-green-300');
+        setTimeout(loadHistory, 500);
+      } else {
+        loadHistory();
+      }
+    }
+
+    async function deleteSession(id, k, d) {
+      if (!confirm("ВНИМАНИЕ! Вы удаляете целую сессию. Все её матчи будут удалены (каскадно базой данных), а убийства и смерти вычтены из профиля. Продолжить?")) return;
+
+      const { error: delErr } = await window.supabase.from('sessions').delete().eq('id', id);
+      if (delErr) {
+        alert("Ошибка удаления");
+        return;
+      }
+
+      const { data: profs } = await window.supabase.from('hunter_profile').select('*').limit(1);
+      if (profs && profs.length > 0) {
+        const p = profs[0];
+        await window.supabase.from('hunter_profile').update({
+          total_kills: Math.max(0, p.total_kills - k),
+          total_deaths: Math.max(0, p.total_deaths - d)
+        }).eq('id', p.id);
+      }
+
+      loadHistory();
     }
 
     function goToAnalytics(event) {
