@@ -10,6 +10,10 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
 
+<!-- Supabase SDK & Config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+
 <!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script>
@@ -38,6 +42,7 @@
 <style>
   * { box-sizing: border-box; }
 
+  html { overflow-y: scroll; }
   html, body {
     min-height: 100vh;
     overflow-x: hidden;
@@ -101,10 +106,10 @@
   </main>
 
   <script>
-    function goToAnalytics(event) {
+    async function goToAnalytics(event) {
       if (event) event.preventDefault();
-      const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
-      if (isLoggedIn) {
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if (session) {
         window.location.href = 'admin.html';
       } else {
         window.location.href = 'index.html';

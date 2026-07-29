@@ -42,6 +42,7 @@
 <style>
   * { box-sizing: border-box; }
 
+  html { overflow-y: scroll; }
   html, body {
     min-height: 100vh;
     overflow-x: hidden;
@@ -282,10 +283,10 @@
       loadHistory();
     }
 
-    function goToAnalytics(event) {
+    async function goToAnalytics(event) {
       if (event) event.preventDefault();
-      const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
-      window.location.href = isLoggedIn ? 'admin.html' : 'index.html';
+      const { data: { session } } = await window.supabase.auth.getSession();
+      window.location.href = session ? 'admin.html' : 'index.html';
     }
   </script>
 </body>

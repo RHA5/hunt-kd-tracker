@@ -46,6 +46,7 @@
 <style>
   * { box-sizing: border-box; }
 
+  html { overflow-y: scroll; }
   html, body {
     min-height: 100vh;
     overflow-x: hidden;
@@ -350,18 +351,24 @@
     let globalStats = null;
     let currentSession = null;
     let timerInterval = null;
+    let allSessions = [];
 
     document.addEventListener("DOMContentLoaded", function() {
       initChart();
       loadData();
       
-      // Автообновление для OBS / второго экрана
-      setInterval(loadData, 5000); 
+      // Подписка на Realtime изменения вместо поллинга
+      window.supabase.channel('public:all-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'hunter_profile' }, payload => { loadData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, payload => { loadData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => { loadData(); })
+        .subscribe();
     });
 
     async function loadData() {
       try {
         await loadGlobalStats();
+        await loadChallengeHistory();
         await checkActiveSession();
         calculateAndRender();
       } catch (err) {
@@ -389,6 +396,15 @@
       
       if (error) throw error;
       globalStats = data;
+    }
+
+    async function loadChallengeHistory() {
+      const { data, error } = await window.supabase
+        .from('sessions')
+        .select('*')
+        .order('start_time', { ascending: false });
+      if (error) throw error;
+      allSessions = data;
     }
 
     async function checkActiveSession() {
@@ -444,24 +460,14 @@
       const tm = globalStats.total_matches;
       const targetKD = globalStats.target_kd || 2.00;
 
-      // Текущий КД
       const currentKD = tk / td;
       document.getElementById('total-kd').innerText = currentKD.toFixed(2);
       document.getElementById('total-kills').innerText = tk.toLocaleString();
       document.getElementById('total-deaths').innerText = td.toLocaleString();
       document.getElementById('total-matches').innerText = tm.toLocaleString();
 
-      // Статистика челленджа
-      const ck = tk - globalStats.start_kills;
-      const cd = td - globalStats.start_deaths;
-      const ckd = cd > 0 ? ck / cd : 0;
-      document.getElementById('challenge-kills').innerText = ck.toLocaleString();
-      document.getElementById('challenge-deaths').innerText = cd.toLocaleString();
-      document.getElementById('challenge-kd').innerText = ckd.toFixed(2);
-
-      // Прогресс-бар (от 1.72 до 2.00)
-      const startKD = 1.72;
-      const endKD = 2.00;
+      const startKD = globalStats.start_deaths > 0 ? (globalStats.start_kills / globalStats.start_deaths) : 1.72;
+      const endKD = targetKD;
       let progress = ((currentKD - startKD) / (endKD - startKD)) * 100;
       progress = Math.max(0, Math.min(100, progress));
       
@@ -469,7 +475,6 @@
       document.getElementById('progress-percent').innerText = progress.toFixed(1) + '%';
       document.getElementById('progress-percent').style.left = progress.toFixed(2) + '%';
 
-      // Сессия
       if (currentSession) {
         document.getElementById('session-kills').innerText = currentSession.kills;
         document.getElementById('session-deaths').innerText = currentSession.deaths;
@@ -481,7 +486,6 @@
         const kpgElem = document.getElementById('session-kpg');
         if (kpgElem) kpgElem.innerText = skpg.toFixed(2);
 
-        // Расчет прироста KD (live-delta)
         const oldKD = (globalStats.total_kills - currentSession.kills) / Math.max(1, globalStats.total_deaths - currentSession.deaths);
         const delta = (globalStats.total_kills / globalStats.total_deaths) - oldKD;
         const deltaElem = document.getElementById('live-delta');
@@ -498,17 +502,163 @@
             deltaElem.classList.add('text-gray-400');
           }
         }
+      } else {
+        document.getElementById('session-kills').innerText = '0';
+        document.getElementById('session-deaths').innerText = '0';
+        document.getElementById('session-matches').innerText = '0';
+        document.getElementById('session-kd').innerText = '0.00';
+        const kpgElem = document.getElementById('session-kpg');
+        if (kpgElem) kpgElem.innerText = '0.00';
+        const deltaElem = document.getElementById('live-delta');
+        if (deltaElem) {
+          deltaElem.innerText = '+0.00000 KD';
+          deltaElem.classList.remove('text-[#81c784]', 'text-[#ffb4ab]');
+          deltaElem.classList.add('text-gray-400');
+        }
       }
 
-      // Промежуточная цель (+0.01)
-      const microTargetKD = Math.round(currentKD * 100) / 100 + 0.01;
-      const microTargetKills = Math.ceil((td * microTargetKD) - tk);
-      document.getElementById('micro-target-kd').innerText = microTargetKD.toFixed(2);
-      document.getElementById('micro-target-kills').innerText = Math.max(0, microTargetKills);
+      // ----------------------------------------------------
+      // РАСЧЕТ ИСТОРИИ ЧЕЛЛЕНДЖА И СТАТИСТИКИ 
+      // ----------------------------------------------------
+      let bestKD = 0;
+      let worstKD = 999;
+      let streak = 0;
+      let streakActive = true;
+      let totalSessionsCount = 0;
 
-      // Глобальная цель 2.0
-      const globalTargetKills = Math.ceil((td * targetKD) - tk);
-      document.getElementById('global-target-kills').innerText = Math.max(0, globalTargetKills);
+      // Рассчитываем тоталы напрямую из разницы, чтобы учесть историю до внедрения нового калькулятора
+      const challengeKillsTotal = Math.max(0, globalStats.total_kills - globalStats.start_kills);
+      const challengeDeathsTotal = Math.max(0, globalStats.total_deaths - globalStats.start_deaths);
+      const challengeMatchesTotal = Math.max(0, globalStats.total_matches);
+
+      allSessions.forEach(s => {
+          if (s.matches_count > 0) {
+              totalSessionsCount++;
+              let sKd = s.deaths > 0 ? s.kills / s.deaths : s.kills;
+              if (sKd > bestKD) bestKD = sKd;
+              if (sKd < worstKD) worstKD = sKd;
+              
+              if (streakActive && s.is_active === false) {
+                  if (sKd >= 2.0) {
+                      streak++;
+                  } else {
+                      streakActive = false;
+                  }
+              }
+          }
+      });
+      if (worstKD === 999) worstKD = 0;
+
+      const ckd = challengeDeathsTotal > 0 ? challengeKillsTotal / challengeDeathsTotal : (challengeKillsTotal > 0 ? challengeKillsTotal : 0);
+      const avgKpg = challengeMatchesTotal > 0 ? challengeKillsTotal / challengeMatchesTotal : 0;
+      const avgDpg = challengeMatchesTotal > 0 ? challengeDeathsTotal / challengeMatchesTotal : 0;
+      const avgMatchesPerSession = totalSessionsCount > 0 ? challengeMatchesTotal / totalSessionsCount : 0;
+
+      const ckDisplay = document.getElementById('challenge-kills');
+      if(ckDisplay) ckDisplay.innerText = challengeKillsTotal.toLocaleString();
+      
+      const cdDisplay = document.getElementById('challenge-deaths');
+      if(cdDisplay) cdDisplay.innerText = challengeDeathsTotal.toLocaleString();
+      
+      const ckdDisplay = document.getElementById('challenge-kd');
+      if(ckdDisplay) ckdDisplay.innerText = ckd.toFixed(2);
+      
+      const bkdDisplay = document.getElementById('best-kd');
+      if(bkdDisplay) bkdDisplay.innerText = bestKD.toFixed(2);
+      
+      const wkdDisplay = document.getElementById('worst-kd');
+      if(wkdDisplay) wkdDisplay.innerText = worstKD.toFixed(2);
+      
+      const tsDisplay = document.getElementById('total-sessions');
+      if(tsDisplay) tsDisplay.innerText = totalSessionsCount.toString();
+      
+      const akpgDisplay = document.getElementById('avg-kpg');
+      if(akpgDisplay) akpgDisplay.innerText = avgKpg.toFixed(2);
+      
+      const streakDisplay = document.getElementById('kd-streak');
+      if(streakDisplay) streakDisplay.innerText = streak.toString();
+
+      // ----------------------------------------------------
+      // ПРОГНОЗЫ И ЦЕЛИ
+      // ----------------------------------------------------
+      // Вычисляем частоту стримов (дней между стримами)
+      let streamFrequency = 1;
+      if (globalStats.start_date && totalSessionsCount > 0) {
+          const startDate = new Date(globalStats.start_date);
+          const now = new Date();
+          const daysPassed = (now - startDate) / (1000 * 60 * 60 * 24);
+          if (daysPassed > 0) {
+              streamFrequency = daysPassed / totalSessionsCount;
+          }
+      }
+
+      function calcForecast(targetKDVal, isOptimistic = false) {
+          const deficit = Math.ceil((td * targetKDVal) - tk);
+          let matches = 0;
+          let sessions = 0;
+          
+          if (isOptimistic) {
+              // Формула Экселя для идеального сценария: Дефицит / (DPG * (Best_KD - Target_KD))
+              const netGain = avgDpg * (bestKD - targetKDVal);
+              if (netGain > 0) {
+                  matches = Math.ceil(Math.max(0, deficit) / netGain);
+                  sessions = avgMatchesPerSession > 0 ? Math.ceil(matches / avgMatchesPerSession) : 0;
+              } else {
+                  matches = "∞";
+                  sessions = "∞";
+              }
+          } else {
+              // Обычный прогноз (текущий KPG и DPG)
+              if (avgKpg > (targetKDVal * avgDpg)) {
+                  matches = Math.ceil(Math.max(0, deficit) / (avgKpg - (targetKDVal * avgDpg)));
+                  sessions = avgMatchesPerSession > 0 ? Math.ceil(matches / avgMatchesPerSession) : 0;
+              } else {
+                  matches = "∞";
+                  sessions = "∞";
+              }
+          }
+
+          let dateStr = "--.--.----";
+          if (sessions !== "∞" && sessions > 0) {
+              let d = new Date();
+              // Прибавляем не просто количество сессий, а календарные дни с учетом частоты стримов
+              d.setDate(d.getDate() + Math.ceil(sessions * streamFrequency));
+              dateStr = d.toLocaleDateString('ru-RU');
+          }
+          return { deficit: Math.max(0, deficit), matches, sessions, dateStr };
+      }
+
+      const microTarget = parseFloat((currentKD + 0.01).toFixed(2));
+      const micro = calcForecast(microTarget, false);
+      const mtkdDisplay = document.getElementById('micro-target-kd');
+      if(mtkdDisplay) mtkdDisplay.innerText = microTarget.toFixed(2);
+      
+      const mtkDisplay = document.getElementById('micro-target-kills');
+      if(mtkDisplay) mtkDisplay.innerText = micro.deficit;
+      const mtmDisplay = document.getElementById('micro-target-matches');
+      if(mtmDisplay) mtmDisplay.innerText = micro.matches;
+      const mtsDisplay = document.getElementById('micro-target-sessions');
+      if(mtsDisplay) mtsDisplay.innerText = micro.sessions;
+      const mtdDisplay = document.getElementById('micro-target-date');
+      if(mtdDisplay) mtdDisplay.innerText = micro.dateStr;
+
+      const global = calcForecast(targetKD, false);
+      const gtkDisplay = document.getElementById('global-target-kills');
+      if(gtkDisplay) gtkDisplay.innerText = global.deficit;
+      const gtmDisplay = document.getElementById('global-target-matches');
+      if(gtmDisplay) gtmDisplay.innerText = global.matches;
+      const gtsDisplay = document.getElementById('global-target-sessions');
+      if(gtsDisplay) gtsDisplay.innerText = global.sessions;
+      const gtdDisplay = document.getElementById('global-target-date');
+      if(gtdDisplay) gtdDisplay.innerText = global.dateStr;
+
+      const optimistic = calcForecast(targetKD, true);
+      const imDisplay = document.getElementById('ideal-matches');
+      if(imDisplay) imDisplay.innerText = optimistic.matches;
+      const isDisplay = document.getElementById('ideal-sessions');
+      if(isDisplay) isDisplay.innerText = optimistic.sessions;
+      const idDisplay = document.getElementById('ideal-date');
+      if(idDisplay) idDisplay.innerText = optimistic.dateStr;
     }
 
     function initChart() {
@@ -547,10 +697,10 @@
       });
     }
 
-    function goToAnalytics(event) {
+    async function goToAnalytics(event) {
       if (event) event.preventDefault();
-      const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
-      if (isLoggedIn) {
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if (session) {
         window.location.href = 'admin.html';
       } else {
         window.location.href = 'index.html';

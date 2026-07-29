@@ -207,20 +207,19 @@
             }
 
             try {
-                const { data, error } = await window.supabase
-                    .from('auth_config')
-                    .select('*')
-                    .eq('login', usernameInput)
-                    .eq('password', passwordInput)
-                    .single();
+                // Превращаем логин в email "под капотом", так как Supabase требует формат email
+                const emailFormat = usernameInput + '@hunt.local';
+                const { data, error } = await window.supabase.auth.signInWithPassword({
+                    email: emailFormat,
+                    password: passwordInput,
+                });
 
-                if (error || !data) {
+                if (error) {
                     alert('Неверный логин или пароль');
                     return false;
                 }
 
                 // Успешный вход
-                localStorage.setItem('sb-tcdtgptiwjmoxugfjvmh-auth-token', 'admin-session-active');
                 window.location.href = 'admin.html';
             } catch (err) {
                 console.error('Ошибка авторизации:', err);
@@ -230,10 +229,10 @@
             return false;
         }
 
-        function goToAnalytics(event) {
+        async function goToAnalytics(event) {
           if (event) event.preventDefault();
-          const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
-          if (isLoggedIn) {
+          const { data: { session } } = await window.supabase.auth.getSession();
+          if (session) {
             window.location.href = 'admin.html';
           } else {
             window.location.href = 'index.html';
