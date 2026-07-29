@@ -59,12 +59,19 @@
   /* ШАПКА — Шрифт Forum по TYPOGRAPHY.md */
   .nav-link {
     font-family: 'Forum', serif;
-    font-size: 13px;
-    letter-spacing: 2px;
-    padding: 10px 20px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 8px 10px;
     color: rgba(229, 226, 225, 0.5);
     transition: all 0.3s ease;
     text-transform: uppercase;
+  }
+  @media (min-width: 768px) {
+    .nav-link {
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 10px 20px;
+    }
   }
   .nav-link:hover {
     color: #ffffff;
@@ -91,7 +98,7 @@
 
   <!-- TOP NAVIGATION -->
   <header class="flex justify-center items-center w-full shrink-0 relative z-40 mb-6 mt-2">
-    <nav class="flex gap-10 font-forum">
+    <nav class="flex gap-2 sm:gap-6 md:gap-10 font-forum">
       <a class="nav-link" href="#" onclick="goToAnalytics(event)">АНАЛИТИКА</a>
       <a class="nav-link" href="history.html">ИСТОРИЯ</a>
       <a class="nav-link active" href="charts.html">ГРАФИКИ</a>
