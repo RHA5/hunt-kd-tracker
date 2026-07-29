@@ -39,8 +39,8 @@
   * { box-sizing: border-box; }
 
   html, body {
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
     background-image: url('1.webp');
     background-size: cover;
     background-position: center;
@@ -82,7 +82,7 @@
 </style>
 </head>
 
-<body class="h-screen w-full flex flex-col items-center p-4 md:p-5 vignette antialiased selection:bg-error selection:text-on-error">
+<body class="min-h-screen w-full flex flex-col items-center p-4 md:p-5 vignette antialiased selection:bg-error selection:text-on-error">
 
   <!-- TOP NAVIGATION -->
   <header class="flex justify-center items-center w-full shrink-0 relative z-40 mb-6 mt-2">

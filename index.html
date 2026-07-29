@@ -47,8 +47,8 @@
   * { box-sizing: border-box; }
 
   html, body {
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
     background-image: url('1.webp');
     background-size: cover;
     background-position: center;
@@ -156,8 +156,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 3.5px;
-    padding-bottom: 3.5px;
+    padding-top: 6px;
+    padding-bottom: 6px;
     border-bottom: 1px solid #35312c;
     font-family: 'EB Garamond', serif;
     font-size: 15px;
@@ -173,7 +173,7 @@
 </style>
 </head>
 
-<body class="h-screen w-full flex flex-col justify-between p-4 md:p-5 vignette antialiased selection:bg-error selection:text-on-error">
+<body class="min-h-screen md:h-screen overflow-x-hidden overflow-y-auto md:overflow-hidden w-full flex flex-col justify-between p-4 md:p-5 vignette antialiased selection:bg-error selection:text-on-error">
 
   <!-- TOP NAVIGATION -->
   <header class="flex justify-center items-center w-full shrink-0 relative z-40 mb-6 mt-2">
@@ -223,7 +223,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow min-h-0 relative z-10 mt-6">
 
       <!-- КОЛОНКА 1 (ЛЕВАЯ): ЦЕЛИ И ПРОГНОЗЫ (ВЫСОТА h-full) -->
-      <div class="flex flex-col gap-4 min-h-0 h-full">
+      <div class="flex flex-col gap-4 min-h-0 h-full order-2 md:order-1">
         <div class="victorian-card p-[18px] rounded-sm flex flex-col justify-start h-full min-h-0">
           
           <div>
@@ -236,7 +236,7 @@
             <div class="stat-row"><span class="stat-label">Примерная дата</span><span id="micro-target-date" class="stat-val">--.--.----</span></div>
           </div>
           
-          <div class="mt-2.5">
+          <div class="mt-6">
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Глобальная цель 2.0 KD</h3>
             <div class="gradient-line mb-2.5"></div>
             <div class="stat-row"><span class="stat-label">Фрагов до цели 2.0</span><span id="global-target-kills" class="stat-val">0</span></div>
@@ -245,7 +245,7 @@
             <div class="stat-row"><span class="stat-label">Дата достижения цели</span><span id="global-target-date" class="stat-val">--.--.----</span></div>
           </div>
 
-          <div class="mt-2.5">
+          <div class="mt-6">
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Идеальный сценарий</h3>
             <div class="gradient-line mb-2.5"></div>
             <div class="stat-row"><span class="stat-label">Идеальный сценарий (Матчей)</span><span id="ideal-matches" class="stat-val">0</span></div>
@@ -257,7 +257,7 @@
       </div>
 
       <!-- КОЛОНКА 2 (ЦЕНТРАЛЬНАЯ): ТЕКУЩИЙ БОЙ (СЕССИЯ + ГРАФИК, ВЫСОТА h-full) -->
-      <div class="flex flex-col gap-4 min-h-0 h-full">
+      <div class="flex flex-col gap-4 min-h-0 h-full order-1 md:order-2">
 
         <!-- СТАТИСТИКА ДНЯ -->
         <div class="victorian-card p-[18px] rounded-sm flex flex-col shrink-0 justify-start">
@@ -292,7 +292,7 @@
       </div>
 
       <!-- КОЛОНКА 3 (ПРАВАЯ): ИТОГИ И СТАТИСТИКА ЧЕЛЛЕНДЖА (ВЫСОТА h-full) -->
-      <div class="flex flex-col gap-4 min-h-0 h-full">
+      <div class="flex flex-col gap-4 min-h-0 h-full order-3 md:order-3">
         <div class="victorian-card p-[18px] rounded-sm flex flex-col justify-start h-full min-h-0">
           
           <div>
@@ -304,7 +304,7 @@
             <div class="stat-row"><span class="stat-label">Сыграно матчей</span><span id="total-matches" class="stat-val">0</span></div>
           </div>
           
-          <div class="mt-4">
+          <div class="mt-6">
             <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Статистика челленджа</h3>
             <div class="gradient-line mb-2.5"></div>
             <div class="stat-row"><span class="stat-label">Убито за челлендж</span><span id="challenge-kills" class="stat-val">0</span></div>

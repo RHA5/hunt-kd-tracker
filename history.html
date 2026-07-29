@@ -43,8 +43,8 @@
   * { box-sizing: border-box; }
 
   html, body {
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
     background-image: url('1.webp');
     background-size: cover;
     background-position: center;
@@ -106,7 +106,7 @@
 </style>
 </head>
 
-<body class="h-screen w-full flex flex-col justify-between p-4 md:p-5 vignette antialiased selection:bg-error selection:text-on-error">
+<body class="min-h-screen w-full flex flex-col justify-between p-4 md:p-5 vignette antialiased selection:bg-error selection:text-on-error">
 
   <header class="flex justify-center items-center w-full shrink-0 relative z-40 mb-6 mt-2">
     <nav class="flex gap-10 font-forum">
@@ -116,14 +116,13 @@
     </nav>
   </header>
 
-  <main class="flex-grow w-full max-w-[1440px] mx-auto flex flex-col gap-4 relative z-20 min-h-0">
-    <section class="victorian-card p-6 rounded-sm flex flex-col h-full min-h-0 shadow-2xl">
+  <main class="flex-grow w-full max-w-[1440px] mx-auto flex flex-col gap-4 relative z-20">
+    <section class="victorian-card p-6 rounded-sm flex flex-col shadow-2xl">
       <div class="flex justify-between items-center mb-4 shrink-0">
         <h2 class="font-forum text-xl text-tertiary tracking-[3px] uppercase">Журнал Охоты</h2>
-        <div class="font-garamond text-xs text-on-surface-variant italic">Records from the Louisiana bayou</div>
       </div>
 
-      <div class="overflow-auto flex-grow min-h-0 custom-scrollbar pr-1">
+      <div class="w-full">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr>
