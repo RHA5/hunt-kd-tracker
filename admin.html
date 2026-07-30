@@ -589,11 +589,19 @@
       initChart();
       loadData();
       
+      let loadDataTimeout = null;
+      function debouncedLoadData() {
+          if (loadDataTimeout) clearTimeout(loadDataTimeout);
+          loadDataTimeout = setTimeout(() => {
+              loadData();
+          }, 300);
+      }
+
       // Подписка на Realtime изменения
       window.supabase.channel('public:all-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'hunter_profile' }, payload => { loadData(); })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, payload => { loadData(); })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => { loadData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'hunter_profile' }, payload => { debouncedLoadData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, payload => { debouncedLoadData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => { debouncedLoadData(); })
         .subscribe();
     });
 
@@ -706,20 +714,8 @@
             fill: false
         };
 
-        // Ватерлиния текущего KD
-        chartInstance.data.datasets[1] = {
-            label: 'Текущий глобальный KD',
-            data: Array(kdData.length).fill(baseKD),
-            borderColor: 'rgba(255, 255, 255, 0.2)',
-            borderWidth: 1,
-            borderDash: [5, 5],
-            pointRadius: 0,
-            fill: false,
-            tension: 0
-        };
-
         // Ватерлиния Цели
-        chartInstance.data.datasets[2] = {
+        chartInstance.data.datasets[1] = {
             label: 'Цель (2.0)',
             data: Array(kdData.length).fill(targetKD),
             borderColor: 'rgba(218, 196, 147, 0.4)',
@@ -729,6 +725,11 @@
             fill: false,
             tension: 0
         };
+
+        // Удаляем третий датасет, если он был
+        if (chartInstance.data.datasets.length > 2) {
+            chartInstance.data.datasets.pop();
+        }
 
         chartInstance.update();
       }
