@@ -472,14 +472,19 @@
         });
 
         const getColorForKD = (kd) => {
-            if (kd >= baseKD) {
+            if (kd === baseKD) return '#9e9e9e';
+            if (kd > baseKD) {
                 let ratio = maxKD > baseKD ? (kd - baseKD) / (maxKD - baseKD) : 1;
                 ratio = Math.min(1, Math.max(0, ratio));
-                return `hsl(120, ${ratio * 100}%, ${62 - 12*ratio}%)`;
+                let sat = 35 + 65 * Math.sqrt(ratio);
+                let light = 62 - 12 * Math.sqrt(ratio);
+                return `hsl(120, ${sat}%, ${light}%)`;
             } else {
                 let ratio = baseKD > minKD ? (baseKD - kd) / (baseKD - minKD) : 1;
                 ratio = Math.min(1, Math.max(0, ratio));
-                return `hsl(0, ${ratio * 100}%, ${62 - 12*ratio}%)`;
+                let sat = 35 + 65 * Math.sqrt(ratio);
+                let light = 62 - 12 * Math.sqrt(ratio);
+                return `hsl(0, ${sat}%, ${light}%)`;
             }
         };
 
