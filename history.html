@@ -240,13 +240,13 @@
       document.getElementById(`c-${id}`).innerHTML = `<input type="text" id="input-c-${id}" value="${session.comment || ''}" maxlength="75" class="w-full bg-black border border-[#57524a] text-[#e5e2e1] px-2 rounded-sm outline-none">`;
       
       document.getElementById(`action-cell-${id}`).innerHTML = `
-        <button id="save-sess-${id}" onclick="saveSession('${id}', ${session.kills}, ${session.deaths})" class="text-green-500 hover:text-green-400 p-1 font-bold" title="Сохранить">✓</button>
-        <button onclick="deleteSession('${id}', ${session.kills}, ${session.deaths})" class="text-red-500 hover:text-red-400 p-1 font-bold" title="Удалить">✕</button>
+        <button id="save-sess-${id}" onclick="saveSession('${id}', ${session.kills}, ${session.deaths}, ${session.matches_count})" class="text-green-500 hover:text-green-400 p-1 font-bold" title="Сохранить">✓</button>
+        <button onclick="deleteSession('${id}', ${session.kills}, ${session.deaths}, ${session.matches_count})" class="text-red-500 hover:text-red-400 p-1 font-bold" title="Удалить">✕</button>
         <button onclick="loadHistory()" class="text-gray-400 hover:text-gray-200 p-1 ml-1" title="Отмена">↺</button>
       `;
     }
 
-    async function saveSession(id, oldK, oldD) {
+    async function saveSession(id, oldK, oldD, oldM) {
       const btn = document.getElementById(`save-sess-${id}`);
       if(btn) btn.innerHTML = "⌛";
 
@@ -257,6 +257,7 @@
 
       const deltaK = newK - oldK;
       const deltaD = newD - oldD;
+      const deltaM = newM - oldM;
 
       const { error: sessErr } = await window.supabase
         .from('sessions')
@@ -269,13 +270,14 @@
         return;
       }
 
-      if (deltaK !== 0 || deltaD !== 0) {
+      if (deltaK !== 0 || deltaD !== 0 || deltaM !== 0) {
         const { data: profs } = await window.supabase.from('hunter_profile').select('*').limit(1);
         if (profs && profs.length > 0) {
           const p = profs[0];
           await window.supabase.from('hunter_profile').update({
             total_kills: Math.max(0, p.total_kills + deltaK),
-            total_deaths: Math.max(0, p.total_deaths + deltaD)
+            total_deaths: Math.max(0, p.total_deaths + deltaD),
+            total_matches: Math.max(0, p.total_matches + deltaM)
           }).eq('id', p.id);
         }
       }
@@ -289,7 +291,7 @@
       }
     }
 
-    async function deleteSession(id, k, d) {
+    async function deleteSession(id, k, d, m) {
       if (!confirm("ВНИМАНИЕ! Вы удаляете целую сессию. Все её матчи будут удалены (каскадно базой данных), а убийства и смерти вычтены из профиля. Продолжить?")) return;
 
       const { error: delErr } = await window.supabase.from('sessions').delete().eq('id', id);
@@ -303,7 +305,8 @@
         const p = profs[0];
         await window.supabase.from('hunter_profile').update({
           total_kills: Math.max(0, p.total_kills - k),
-          total_deaths: Math.max(0, p.total_deaths - d)
+          total_deaths: Math.max(0, p.total_deaths - d),
+          total_matches: Math.max(0, p.total_matches - m)
         }).eq('id', p.id);
       }
 
