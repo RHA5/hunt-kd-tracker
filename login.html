@@ -51,13 +51,17 @@
             font-family: 'EB Garamond', serif;
         }
 
-        /* ФОНОВОЕ ИЗОБРАЖЕНИЕ */
+        /* ФОНОВОЕ ИЗОБРАЖЕНИЕ (Игровой контейнер 1920x1080) */
         .bg-container {
             position: fixed;
-            inset: 0;
+            top: 50%;
+            left: 50%;
+            width: 1920px;
+            height: 1080px;
             background-image: url('bg_login.webp');
             background-size: cover;
             background-position: center;
+            transform-origin: center center;
             z-index: 1;
         }
 
@@ -71,10 +75,9 @@
 
         /* КОНТЕЙНЕР ФОРМЫ — СМЕЩЕНИЕ ТОЧНО НА БЕЛО-ЖЕЛТУЮ БУМАГУ КНИГИ */
         .login-overlay {
-            position: relative;
+            position: absolute;
+            inset: 0;
             z-index: 10;
-            min-height: 100vh;
-            width: 100vw;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -84,7 +87,6 @@
             /* Сдвигаем форму вправо и вниз, так как "бумага" на обложке книги немного смещена от географического центра экрана */
             transform: translate(26px, 12px);
             width: 530px;
-            max-width: 80vw;
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -170,31 +172,49 @@
 
 <body class="antialiased selection:bg-tertiary selection:text-background">
 
-    <div class="bg-container">
+    <!-- ИГРОВОЙ КОНТЕЙНЕР (Фиксированный размер 1920x1080, масштабируется через JS) -->
+    <div id="game-container" class="bg-container">
+        
+        <!-- Затемнение по краям -->
         <div class="vignette"></div>
+
+        <!-- Поля ввода, приклеенные к центру -->
+        <main class="login-overlay">
+            <form class="form-container" onsubmit="return handleLogin(event)" novalidate>
+
+                <div class="input-group">
+                    <label class="input-label" for="username">ЛОГИН:</label>
+                    <input class="hunt-input" id="username" type="text" autocomplete="username">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label" for="password">ПАРОЛЬ:</label>
+                    <input class="hunt-input" id="password" type="password" autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-identify">
+                    ВОЙТИ
+                </button>
+
+            </form>
+        </main>
+
     </div>
 
-    <main class="login-overlay">
-        <form class="form-container" onsubmit="return handleLogin(event)" novalidate>
-
-            <div class="input-group">
-                <label class="input-label" for="username">ЛОГИН:</label>
-                <input class="hunt-input" id="username" type="text" autocomplete="username">
-            </div>
-
-            <div class="input-group">
-                <label class="input-label" for="password">ПАРОЛЬ:</label>
-                <input class="hunt-input" id="password" type="password" autocomplete="current-password">
-            </div>
-
-            <button type="submit" class="btn-identify">
-                ВОЙТИ
-            </button>
-
-        </form>
-    </main>
-
     <script>
+        // Адаптивное масштабирование контейнера
+        function resizeGameContainer() {
+            const container = document.getElementById('game-container');
+            if (!container) return;
+            const scaleX = window.innerWidth / 1920;
+            const scaleY = window.innerHeight / 1080;
+            // Используем Math.max для имитации "cover" — контейнер всегда заполняет экран без пустот
+            const scale = Math.max(scaleX, scaleY);
+            container.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        }
+        window.addEventListener('resize', resizeGameContainer);
+        resizeGameContainer();
+
         async function handleLogin(e) {
             e.preventDefault();
             
