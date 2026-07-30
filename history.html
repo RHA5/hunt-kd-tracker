@@ -144,9 +144,10 @@
         <table class="w-full text-left border-collapse">
           <thead>
             <tr>
-              <th class="table-th">Начало</th>
-              <th class="table-th">Конец</th>
-              <th class="table-th text-center">Убийств</th>
+              <th class="table-th pl-4 rounded-tl-sm">Начало</th>
+              <th class="table-th">Окончание</th>
+              <th class="table-th text-center">Время</th>
+              <th class="table-th text-center">Убито</th>
               <th class="table-th text-center">Смертей</th>
               <th class="table-th text-center">Матчей</th>
               <th class="table-th text-center">KD</th>
@@ -198,6 +199,7 @@
           <tr class="table-row" id="row-${s.id}">
             <td class="py-3 cell-date">${new Date(s.start_time).toLocaleString()}</td>
             <td class="py-3 cell-date">${s.end_time ? new Date(s.end_time).toLocaleString() : '---'}</td>
+            <td class="py-3 cell-num" style="opacity: 0.8">${s.duration_hours ? s.duration_hours : '---'}</td>
             <td class="py-3 cell-num" id="k-${s.id}">${s.kills}</td>
             <td class="py-3 cell-num" id="d-${s.id}">${s.deaths}</td>
             <td class="py-3 cell-num" id="m-${s.id}">${s.matches_count}</td>
