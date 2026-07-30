@@ -401,38 +401,42 @@
       </div>
 
       <!-- RIGHT CARD: INPUTS & RECORD (Идеальное выравнивание по нижней границе интерактивных элементов) -->
-      <div id="input-controls-section" class="victorian-card rounded-sm px-4 py-3 w-[660px] h-[82px] flex items-end justify-between shadow-xl relative z-50 transition-all opacity-30 pointer-events-none">
+      <div id="input-controls-section" class="victorian-card rounded-sm px-4 py-4 md:py-3 w-full max-w-[660px] h-auto min-h-[82px] flex flex-col md:flex-row items-center md:items-end justify-between gap-5 md:gap-0 shadow-xl relative z-50 transition-all opacity-30 pointer-events-none">
         
         <!-- Left Side: Inputs and Submit -->
-        <div class="flex items-end gap-6">
-          <!-- Kills -->
-          <div class="flex flex-col items-center gap-1">
-            <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">УБИЙСТВА</span>
-            <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
-              <button onclick="adjustInput('kills', -1)" class="stepper-btn">-</button>
-              <input id="input-kills" type="number" value="0" min="0" class="stepper-input w-[40px] text-center" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
-              <button onclick="adjustInput('kills', 1)" class="stepper-btn">+</button>
+        <div class="flex flex-col md:flex-row items-center md:items-end gap-5 md:gap-6 w-full md:w-auto">
+          
+          <!-- СЧЕТЧИКИ (Остаются в линию на мобилках) -->
+          <div class="flex items-center gap-6">
+            <!-- Kills -->
+            <div class="flex flex-col items-center gap-1">
+              <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">УБИЙСТВА</span>
+              <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
+                <button onclick="adjustInput('kills', -1)" class="stepper-btn">-</button>
+                <input id="input-kills" type="number" value="0" min="0" class="stepper-input w-[40px] text-center" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
+                <button onclick="adjustInput('kills', 1)" class="stepper-btn">+</button>
+              </div>
             </div>
-          </div>
 
-          <!-- Deaths -->
-          <div class="flex flex-col items-center gap-1">
-            <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">СМЕРТИ</span>
-            <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
-              <button onclick="adjustInput('deaths', -1)" class="stepper-btn">-</button>
-              <input id="input-deaths" type="number" value="0" min="0" class="stepper-input w-[40px] text-center" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
-              <button onclick="adjustInput('deaths', 1)" class="stepper-btn">+</button>
+            <!-- Deaths -->
+            <div class="flex flex-col items-center gap-1">
+              <span class="font-forum text-[9px] font-bold text-[#8e9192] tracking-widest uppercase">СМЕРТИ</span>
+              <div class="flex items-center gap-1 bg-black/70 p-1 border border-[#3d3935] h-[44px]">
+                <button onclick="adjustInput('deaths', -1)" class="stepper-btn">-</button>
+                <input id="input-deaths" type="number" value="0" min="0" class="stepper-input w-[40px] text-center" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'">
+                <button onclick="adjustInput('deaths', 1)" class="stepper-btn">+</button>
+              </div>
             </div>
           </div>
 
           <!-- Submit Button -->
-          <button id="btn-record" class="btn-record ml-2" onclick="recordMatch()">
+          <button id="btn-record" class="btn-record md:ml-2" onclick="recordMatch()">
             <span id="record-txt" style="position: relative; z-index: 2;">ЗАПИСАТЬ МАТЧ</span>
           </button>
         </div>
 
         <!-- Editor Button -->
-        <button onclick="openEditorModal()" class="w-[140px] bg-[#181615] border border-[#dac493]/30 hover:border-[#dac493] text-[#dac493] font-forum text-[11px] font-bold h-[44px] rounded-sm transition-all uppercase tracking-[2px] shadow-md leading-[1.2]" style="padding: 0 4px;">
+        <button onclick="openEditorModal()" class="w-[170px] md:w-[140px] bg-[#181615] border border-[#dac493]/30 hover:border-[#dac493] text-[#dac493] font-forum text-[11px] font-bold h-[44px] rounded-sm transition-all uppercase tracking-[2px] shadow-md leading-[1.2]" style="padding: 0 4px;">
           РЕДАКТОР
         </button>
 
