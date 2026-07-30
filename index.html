@@ -198,6 +198,11 @@
     height: 1px;
     background: linear-gradient(90deg, transparent 0%, #57524a 50%, transparent 100%);
   }
+  @media (min-width: 1900px) {
+    header, main {
+      zoom: 1.25;
+    }
+  }
 </style>
 </head>
 
@@ -212,7 +217,7 @@
     </nav>
   </header>
 
-  <main class="flex-grow w-full max-w-[1700px] mx-auto flex flex-col gap-4 relative z-20 min-h-0">
+  <main class="flex-grow w-full max-w-[1440px] mx-auto flex flex-col gap-4 relative z-20 min-h-0">
 
     <!-- DISPLAY STRIP (ЦЕНТРИРОВАННЫЙ ТАЙМЕР БЕЗ СТРИМЕРСКИХ КНОПОК) -->
     <section class="flex flex-wrap items-center justify-center gap-6 w-full relative z-50 shrink-0 mb-6">
