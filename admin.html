@@ -814,8 +814,11 @@
           if (s.matches_count > 0) {
               totalSessionsCount++;
               let sKd = s.deaths > 0 ? s.kills / s.deaths : s.kills;
-              if (sKd > bestKD) bestKD = sKd;
-              if (sKd < worstKD) worstKD = sKd;
+              
+              if (s.is_active === false) {
+                  if (sKd > bestKD) bestKD = sKd;
+                  if (sKd < worstKD) worstKD = sKd;
+              }
               
               if (streakActive && s.is_active === false) {
                   if (sKd >= 2.0) {
@@ -1214,6 +1217,7 @@
     /* HOLD TO DELETE MATCH LOGIC */
     async function recordMatch() {
       if (!currentSession) return alert("Сначала начни охоту!");
+      await window.supabase.auth.getSession(); // Пробуждаем сессию
       const k = parseInt(document.getElementById('input-kills').value) || 0;
       const d = parseInt(document.getElementById('input-deaths').value) || 0;
 
@@ -1259,7 +1263,8 @@
 
       document.getElementById('input-kills').value = 0;
       document.getElementById('input-deaths').value = 0;
-      // Realtime will auto update stats
+      
+      loadData(); // Принудительно обновляем UI
     }
 
     let editorMatches = [];
@@ -1379,7 +1384,7 @@
         .eq('id', globalStats.id);
 
       await renderEditorTable();
-      await renderEditorTable();
+      loadData(); // Принудительно обновляем UI
 
       const btn = document.getElementById(`save-btn-${matchId}`);
       if (btn) {
@@ -1428,7 +1433,7 @@
         .eq('id', globalStats.id);
 
       await renderEditorTable();
-      await renderEditorTable();
+      loadData(); // Принудительно обновляем UI
     }
 
 

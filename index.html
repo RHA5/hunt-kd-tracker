@@ -598,8 +598,11 @@
           if (s.matches_count > 0) {
               totalSessionsCount++;
               let sKd = s.deaths > 0 ? s.kills / s.deaths : s.kills;
-              if (sKd > bestKD) bestKD = sKd;
-              if (sKd < worstKD) worstKD = sKd;
+              
+              if (s.is_active === false) {
+                  if (sKd > bestKD) bestKD = sKd;
+                  if (sKd < worstKD) worstKD = sKd;
+              }
               
               if (streakActive && s.is_active === false) {
                   if (sKd >= 2.0) {
