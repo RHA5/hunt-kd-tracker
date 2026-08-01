@@ -1089,12 +1089,19 @@
       document.getElementById('end-popup-msg').textContent = msg;
       document.getElementById('end-popup-character-img').src = imgUrl;
 
-      // Портирование стартового комментария
+      // Портирование стартового комментария и лодаута
       const commentField = document.getElementById('end-popup-comment');
       if (currentSession.comment) {
         commentField.value = currentSession.comment + (currentSession.comment.endsWith('\n') ? '' : '\n');
       } else {
         commentField.value = '';
+      }
+
+      const loadoutField = document.getElementById('end-popup-loadout');
+      if (currentSession.loadout) {
+        loadoutField.value = currentSession.loadout;
+      } else {
+        loadoutField.value = '';
       }
 
       const popup = document.getElementById('end-hunt-popup');
