@@ -493,7 +493,7 @@
           </div>
 
           <div class="mt-6">
-            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Оптимистичный прогноз <span onclick="alert('Сценарий достижения цели, если стример всегда будет играть на уровне своего рекорда KD.')" title="Сценарий достижения цели, если стример всегда будет играть на уровне своего рекорда KD." class="cursor-help text-[11px] font-sans border border-[#dac493] text-[#dac493] rounded-full w-[15px] h-[15px] inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity ml-1.5 align-middle mb-[2px]">?</span></h3>
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Оптимистичный прогноз <span onclick="if(window.matchMedia('(pointer: coarse)').matches) alert('Сценарий достижения цели, если стример всегда будет играть на уровне своего рекорда KD.')" title="Сценарий достижения цели, если стример всегда будет играть на уровне своего рекорда KD." class="cursor-help text-[11px] font-sans border border-[#dac493] text-[#dac493] rounded-full w-[15px] h-[15px] inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity ml-1.5 align-middle mb-[2px]">?</span></h3>
             <div class="gradient-line mb-2.5"></div>
             <div class="stat-row"><span class="stat-label">Осталось матчей</span><span id="ideal-matches" class="stat-val">0</span></div>
             <div class="stat-row"><span class="stat-label">Осталось сессий</span><span id="ideal-sessions" class="stat-val">0</span></div>
@@ -526,7 +526,7 @@
         <!-- ЖИВОЙ ГРАФИК СЕССИИ (РАСТЯГИВАЕТСЯ НА ОСТАВШУЮСЯ ВЫСОТУ И ВЫРАВНИВАЕТ НИЗ h-full) -->
         <div class="victorian-card p-[18px] rounded-sm flex flex-col flex-grow justify-start min-h-0">
           <div class="flex justify-between items-center pb-1 shrink-0">
-            <span class="font-forum text-[11px] text-tertiary font-bold uppercase tracking-wider">Динамика KD текущей сессии</span>
+            <span class="font-forum text-[11px] text-tertiary font-bold uppercase tracking-wider">Пульс KD <span onclick="if(window.matchMedia('(pointer: coarse)').matches) alert('Показывает, как менялся средний KD после каждого матча в течение этой сессии.')" title="Показывает, как менялся средний KD после каждого матча в течение этой сессии." class="cursor-help text-[11px] font-sans border border-[#dac493] text-[#dac493] rounded-full w-[15px] h-[15px] inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity ml-1 align-middle mb-[2px]">?</span></span>
           </div>
           <div class="gradient-line mb-2 shrink-0"></div>
           <div class="w-full flex-grow relative min-h-0">
@@ -1006,6 +1006,7 @@
       document.getElementById('popup-greeting-text').textContent = char.greeting;
       document.getElementById('popup-rating').value = '';
       document.getElementById('popup-comment').value = '';
+      document.getElementById('popup-loadout').value = '';
       
       const popup = document.getElementById('start-hunt-popup');
       const content = document.getElementById('start-hunt-modal-content');
@@ -1121,6 +1122,7 @@
 
     async function confirmEndHunt() {
       const comment = document.getElementById('end-popup-comment').value;
+      const loadout = document.getElementById('end-popup-loadout').value;
       
       closeEndHuntPopup();
 
@@ -1129,7 +1131,8 @@
         .update({ 
           is_active: false, 
           end_time: new Date().toISOString(),
-          comment: comment
+          comment: comment,
+          loadout: loadout
         })
         .eq('id', currentSession.id);
 
@@ -1144,6 +1147,7 @@
     async function confirmStartHunt() {
       const ratingInput = document.getElementById('popup-rating').value;
       const comment = document.getElementById('popup-comment').value;
+      const loadout = document.getElementById('popup-loadout').value;
       
       let rating = parseInt(ratingInput);
       if (isNaN(rating) || rating < 1 || rating > 10) {
@@ -1159,7 +1163,8 @@
           is_active: true, 
           start_time: new Date().toISOString(),
           condition_rating: rating,
-          comment: comment
+          comment: comment,
+          loadout: loadout
         }])
         .select()
         .single();
@@ -1505,12 +1510,20 @@
         </span>
       </div>
 
+      <!-- Loadout Input -->
+      <div class="w-full mb-4">
+        <div class="font-forum text-xs text-[#dac493]/70 uppercase tracking-widest mb-2 text-center">Лодаут</div>
+        <input type="text" id="popup-loadout" 
+               class="w-full h-10 bg-black/40 border border-[#dac493]/20 text-[#e5e2e1] p-3 text-sm font-garamond outline-none focus:border-[#dac493]/60 focus:bg-black/60 transition-all rounded-sm placeholder:text-[#8e9192] shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]" 
+               maxlength="75" placeholder="Например: Mosin + Uppercut...">
+      </div>
+
       <!-- Comment Input -->
       <div class="w-full mb-8">
         <div class="font-forum text-xs text-[#dac493]/70 uppercase tracking-widest mb-2 text-center">Заметки перед боем</div>
         <textarea id="popup-comment" 
                   class="w-full h-20 bg-black/40 border border-[#dac493]/20 text-[#e5e2e1] p-3 text-sm font-garamond resize-none outline-none focus:border-[#dac493]/60 focus:bg-black/60 transition-all rounded-sm placeholder:text-[#8e9192] custom-scrollbar shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]" 
-                  placeholder="Дополнительный комментарий (необязательно)..."></textarea>
+                  maxlength="75" placeholder="Дополнительный комментарий (необязательно)..."></textarea>
       </div>
 
       <!-- Submit Button -->
@@ -1553,12 +1566,20 @@
         MSG
       </p>
 
+      <!-- Loadout Input -->
+      <div class="w-full mb-4">
+        <div class="font-forum text-xs text-[#dac493]/70 uppercase tracking-widest mb-2 text-center">Лодаут</div>
+        <input type="text" id="end-popup-loadout" 
+               class="w-full h-10 bg-black/40 border border-[#dac493]/20 text-[#e5e2e1] p-3 text-sm font-garamond outline-none focus:border-[#dac493]/60 focus:bg-black/60 transition-all rounded-sm placeholder:text-[#8e9192] shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]" 
+               maxlength="75" placeholder="Например: Mosin + Uppercut...">
+      </div>
+
       <!-- Comment Input -->
       <div class="w-full mb-8">
         <div class="font-forum text-xs text-[#dac493]/70 uppercase tracking-widest mb-2 text-center">Заметки по итогам сессии</div>
         <textarea id="end-popup-comment" 
                   class="w-full h-24 bg-black/40 border border-[#dac493]/20 text-[#e5e2e1] p-3 text-sm font-garamond resize-none outline-none focus:border-[#dac493]/60 focus:bg-black/60 transition-all rounded-sm placeholder:text-[#8e9192] custom-scrollbar shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]" 
-                  placeholder="Дополнительный комментарий (необязательно)..."></textarea>
+                  maxlength="75" placeholder="Дополнительный комментарий (необязательно)..."></textarea>
       </div>
 
       <!-- Submit Button -->

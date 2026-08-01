@@ -274,7 +274,7 @@
           </div>
 
           <div class="mt-6">
-            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Оптимистичный прогноз <span onclick="alert('Сценарий достижения цели, если стример всегда будет играть на уровне своего рекорда KD.')" title="Сценарий достижения цели, если стример всегда будет играть на уровне своего рекорда KD." class="cursor-help text-[11px] font-sans border border-[#dac493] text-[#dac493] rounded-full w-[15px] h-[15px] inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity ml-1.5 align-middle mb-[2px]">?</span></h3>
+            <h3 class="font-forum text-sm text-tertiary font-bold tracking-[2px] uppercase text-center mb-1">Оптимистичный прогноз <span onclick="if(window.matchMedia('(pointer: coarse)').matches) alert('Сценарий достижения цели, если стример всегда будет играть на уровне своего рекорда KD.')" title="Сценарий достижения цели, если стример всегда будет играть на уровне своего рекорда KD." class="cursor-help text-[11px] font-sans border border-[#dac493] text-[#dac493] rounded-full w-[15px] h-[15px] inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity ml-1.5 align-middle mb-[2px]">?</span></h3>
             <div class="gradient-line mb-2.5"></div>
             <div class="stat-row"><span class="stat-label">Осталось матчей</span><span id="ideal-matches" class="stat-val">0</span></div>
             <div class="stat-row"><span class="stat-label">Осталось сессий</span><span id="ideal-sessions" class="stat-val">0</span></div>
@@ -308,8 +308,7 @@
         <!-- ЖИВОЙ ГРАФИК СЕССИИ -->
         <div class="victorian-card p-[18px] rounded-sm flex flex-col flex-grow justify-start min-h-0">
           <div class="flex justify-between items-center pb-1 shrink-0">
-            <span class="font-forum text-[11px] text-tertiary font-bold uppercase tracking-wider">Динамика KD текущей сессии</span>
-            <span class="font-garamond text-[11px] text-gray-500">Live Chart</span>
+            <span class="font-forum text-[11px] text-tertiary font-bold uppercase tracking-wider">Пульс KD <span onclick="if(window.matchMedia('(pointer: coarse)').matches) alert('Показывает, как менялся средний KD после каждого матча в течение этой сессии.')" title="Показывает, как менялся средний KD после каждого матча в течение этой сессии." class="cursor-help text-[11px] font-sans border border-[#dac493] text-[#dac493] rounded-full w-[15px] h-[15px] inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity ml-1 align-middle mb-[2px]">?</span></span>
           </div>
           <div class="gradient-line mb-2 shrink-0"></div>
           <div class="w-full flex-grow relative min-h-0">

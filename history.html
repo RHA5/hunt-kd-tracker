@@ -14,6 +14,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script>
@@ -152,6 +155,7 @@
               <th class="table-th text-center">Матчей</th>
               <th class="table-th text-center">KD</th>
               <th class="table-th text-center">KPG</th>
+              <th class="table-th text-center">Лодаут</th>
               <th class="table-th pl-4 w-64 max-w-xs">Комментарий</th>
               <th id="th-actions" class="table-th text-right hidden">Действия</th>
             </tr>
@@ -163,6 +167,45 @@
       </div>
     </section>
   </main>
+
+  <!-- DRAWER OVERLAY -->
+  <div id="drawer-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300" onclick="closeDrawer()"></div>
+  
+  <!-- DRAWER PANEL -->
+  <div id="drawer-panel" class="fixed top-0 right-0 h-full w-full md:w-1/2 bg-[#141313] border-l border-[#57524a] shadow-[-10px_0_30px_rgba(0,0,0,0.9)] z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+    <!-- Header -->
+    <div class="p-5 border-b border-[#35312c] flex justify-between items-center bg-[#181615]">
+      <div>
+        <h3 class="font-forum text-lg text-tertiary tracking-[2px] uppercase">История матчей</h3>
+        <p id="drawer-date" class="font-courier text-xs text-[#8e9192]"></p>
+        <p id="drawer-loadout" class="font-forum text-sm text-[#dac493]/80 mt-1"></p>
+      </div>
+      <button onclick="closeDrawer()" class="text-[#dac493]/50 hover:text-[#dac493] transition-colors p-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    
+    <!-- Body -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar p-5 flex flex-col gap-6">
+      
+      <!-- Chart -->
+      <div class="victorian-card p-4 rounded-sm flex flex-col min-h-[300px]">
+        <h4 class="font-forum text-xs text-tertiary font-bold uppercase tracking-wider mb-2 text-center">Пульс KD <span onclick="if(window.matchMedia('(pointer: coarse)').matches) alert('Показывает, как менялся средний KD после каждого матча в течение этой сессии.')" title="Показывает, как менялся средний KD после каждого матча в течение этой сессии." class="cursor-help text-[11px] font-sans border border-[#dac493] text-[#dac493] rounded-full w-[15px] h-[15px] inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity ml-1 align-middle mb-[2px]">?</span></h4>
+        <div class="w-full flex-grow relative min-h-[250px]">
+          <canvas id="drawerChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="victorian-card p-4 rounded-sm">
+        <h4 class="font-forum text-xs text-tertiary font-bold uppercase tracking-wider mb-3 text-center">Матчи</h4>
+        <div id="drawer-matches-container">
+          <div class="text-center text-[#dac493]/50 font-garamond text-sm">Загрузка...</div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", loadHistory);
@@ -190,16 +233,14 @@
     async function loadHistory() {
       const { data, error } = await window.supabase
         .from('sessions')
-        .select('*')
+        .select('*, matches(id)')
         .order('start_time', { ascending: false });
 
       if (error) return console.error(error);
       sessionsData = data;
 
       const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
-      if (isLoggedIn) {
-        document.getElementById('th-actions').classList.remove('hidden');
-      }
+      document.getElementById('th-actions').classList.remove('hidden');
 
       const tbody = document.getElementById('history-body');
       tbody.innerHTML = data.map(s => {
@@ -207,11 +248,16 @@
         const kpg = s.matches_count > 0 ? (s.kills / s.matches_count).toFixed(2) : '0.00';
         const kdClass = kd >= 2.0 ? 'cell-kd-positive' : 'cell-kd-negative';
         
-        const actionHtml = isLoggedIn ? `
-          <td class="py-3 text-right pr-2" id="action-cell-${s.id}">
-            <button onclick="editSession('${s.id}')" class="text-tertiary hover:text-white p-1">✏️</button>
-          </td>
-        ` : '';
+        const hasMatches = s.matches && s.matches.length > 0;
+        
+        let actionHtml = `<td class="py-3 text-right pr-2 whitespace-nowrap" id="action-cell-${s.id}">`;
+        if (hasMatches) {
+          actionHtml += `<button onclick="openDrawer('${s.id}')" class="text-tertiary hover:text-white p-1" title="История матчей">📊</button>`;
+        }
+        if (isLoggedIn) {
+          actionHtml += `<button onclick="editSession('${s.id}')" class="text-tertiary hover:text-white p-1 ml-1" title="Редактировать">✏️</button>`;
+        }
+        actionHtml += `</td>`;
 
         return `
           <tr class="table-row" id="row-${s.id}">
@@ -223,6 +269,9 @@
             <td class="py-3 cell-num" id="m-${s.id}">${s.matches_count}</td>
             <td class="py-3 ${kdClass}">${kd}</td>
             <td class="py-3 cell-num">${kpg}</td>
+            <td class="py-3 text-center" id="l-${s.id}">
+              ${s.loadout ? `<span title="${s.loadout}" onclick="if(window.matchMedia('(pointer: coarse)').matches) alert('${s.loadout}')" class="cursor-help opacity-70 hover:opacity-100 text-[#dac493]">⚔️</span>` : `<span class="opacity-40">-</span>`}
+            </td>
             <td class="py-3 font-garamond text-sm text-on-surface-variant pl-4 opacity-70 break-words whitespace-normal max-w-[250px]" id="c-${s.id}">${s.comment || ''}</td>
             ${actionHtml}
           </tr>
@@ -237,6 +286,7 @@
       document.getElementById(`k-${id}`).innerHTML = `<input type="number" id="input-k-${id}" value="${session.kills}" min="0" class="w-12 bg-black border border-[#57524a] text-center text-[#e5e2e1] rounded-sm outline-none">`;
       document.getElementById(`d-${id}`).innerHTML = `<input type="number" id="input-d-${id}" value="${session.deaths}" min="0" class="w-12 bg-black border border-[#57524a] text-center text-[#e5e2e1] rounded-sm outline-none">`;
       document.getElementById(`m-${id}`).innerHTML = `<input type="number" id="input-m-${id}" value="${session.matches_count}" min="0" class="w-12 bg-black border border-[#57524a] text-center text-[#e5e2e1] rounded-sm outline-none">`;
+      document.getElementById(`l-${id}`).innerHTML = `<input type="text" id="input-l-${id}" value="${session.loadout || ''}" maxlength="75" class="w-16 bg-black border border-[#57524a] text-[#e5e2e1] px-1 rounded-sm outline-none text-xs" title="Лодаут">`;
       document.getElementById(`c-${id}`).innerHTML = `<input type="text" id="input-c-${id}" value="${session.comment || ''}" maxlength="75" class="w-full bg-black border border-[#57524a] text-[#e5e2e1] px-2 rounded-sm outline-none">`;
       
       document.getElementById(`action-cell-${id}`).innerHTML = `
@@ -254,6 +304,7 @@
       const newD = parseInt(document.getElementById(`input-d-${id}`).value) || 0;
       const newM = parseInt(document.getElementById(`input-m-${id}`).value) || 0;
       const newC = document.getElementById(`input-c-${id}`).value || null;
+      const newL = document.getElementById(`input-l-${id}`).value || null;
 
       const deltaK = newK - oldK;
       const deltaD = newD - oldD;
@@ -261,7 +312,7 @@
 
       const { error: sessErr } = await window.supabase
         .from('sessions')
-        .update({ kills: newK, deaths: newD, matches_count: newM, comment: newC })
+        .update({ kills: newK, deaths: newD, matches_count: newM, comment: newC, loadout: newL })
         .eq('id', id);
 
       if (sessErr) {
@@ -317,6 +368,162 @@
       if (event) event.preventDefault();
       const { data: { session } } = await window.supabase.auth.getSession();
       window.location.href = session ? 'admin.html' : 'index.html';
+    }
+
+    // DRAWER LOGIC
+    let drawerChartInstance = null;
+
+    async function openDrawer(sessionId) {
+      const session = sessionsData.find(s => s.id === sessionId);
+      if (!session) return;
+      
+      document.getElementById('drawer-date').textContent = new Date(session.start_time).toLocaleString();
+      document.getElementById('drawer-loadout').textContent = session.loadout ? `⚔️ ${session.loadout}` : '';
+      
+      document.getElementById('drawer-matches-container').innerHTML = '<div class="text-center text-[#dac493]/50 font-garamond text-sm">Загрузка...</div>';
+      
+      const overlay = document.getElementById('drawer-overlay');
+      const panel = document.getElementById('drawer-panel');
+      
+      overlay.classList.remove('hidden');
+      void overlay.offsetWidth; // trigger reflow
+      overlay.classList.remove('opacity-0');
+      panel.classList.remove('translate-x-full');
+
+      // Fetch matches
+      const { data: matches, error } = await window.supabase
+        .from('matches')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        document.getElementById('drawer-matches-container').innerHTML = '<div class="text-center text-red-500 font-garamond text-sm">Ошибка загрузки</div>';
+        return;
+      }
+
+      renderDrawerMatches(matches);
+      renderDrawerChart(matches);
+    }
+
+    function closeDrawer() {
+      const overlay = document.getElementById('drawer-overlay');
+      const panel = document.getElementById('drawer-panel');
+      
+      overlay.classList.add('opacity-0');
+      panel.classList.add('translate-x-full');
+      
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+      }, 300);
+    }
+
+    function renderDrawerMatches(matches) {
+      const container = document.getElementById('drawer-matches-container');
+      if (!matches || matches.length === 0) {
+        container.innerHTML = '<div class="text-center text-[#dac493]/50 font-garamond py-4">Детальная поматчевая статистика недоступна для старых сессий.</div>';
+        return;
+      }
+
+      let html = `<table class="w-full text-left font-garamond text-base text-[#e5e2e1] border-collapse">
+        <thead>
+          <tr class="border-b border-[#dac493]/20">
+            <th class="py-2 font-forum text-[#dac493]/70 font-normal uppercase tracking-wider">Матч</th>
+            <th class="py-2 font-forum text-[#dac493]/70 font-normal uppercase tracking-wider text-center">Киллы</th>
+            <th class="py-2 font-forum text-[#dac493]/70 font-normal uppercase tracking-wider text-center">Смерти</th>
+          </tr>
+        </thead>
+        <tbody>`;
+        
+      let totalK = 0;
+      let totalD = 0;
+      matches.forEach((m, idx) => {
+        totalK += m.kills;
+        totalD += m.deaths;
+        html += `<tr class="border-b border-[#35312c]">
+          <td class="py-3 text-[#dac493]">#${idx + 1}</td>
+          <td class="py-3 text-center cell-num text-lg">${m.kills}</td>
+          <td class="py-3 text-center cell-num text-lg">${m.deaths}</td>
+        </tr>`;
+      });
+      html += `<tr class="border-b-2 border-t-2 border-[#dac493]/30 bg-[rgba(218,196,147,0.05)]">
+        <td class="py-3 font-forum text-[#dac493] font-bold tracking-wider uppercase text-sm">Итого</td>
+        <td class="py-3 text-center cell-num text-[#dac493] font-bold text-lg">${totalK}</td>
+        <td class="py-3 text-center cell-num text-[#dac493] font-bold text-lg">${totalD}</td>
+      </tr>`;
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    function renderDrawerChart(matches) {
+      if (drawerChartInstance) {
+        drawerChartInstance.destroy();
+      }
+
+      const ctx = document.getElementById('drawerChart').getContext('2d');
+      if (!matches || matches.length === 0) {
+        return; // Ничего не рисуем
+      }
+
+      let rollingKills = 0;
+      let rollingDeaths = 0;
+      const kdData = [];
+      const labels = [];
+      
+      // Начинаем с 0 матчей
+      kdData.push(0);
+      labels.push('Старт');
+
+      matches.forEach((m, idx) => {
+        rollingKills += m.kills;
+        rollingDeaths += m.deaths;
+        const currentKD = rollingDeaths > 0 ? (rollingKills / rollingDeaths) : rollingKills;
+        kdData.push(currentKD);
+        labels.push(`Матч ${idx + 1}`);
+      });
+
+      drawerChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'KD Сессии',
+            data: kdData,
+            segment: {
+              borderColor: ctx => {
+                if (ctx.p0DataIndex === 0) return '#85e0a3';
+                const prev = ctx.p0.parsed.y;
+                const curr = ctx.p1.parsed.y;
+                return curr >= prev ? '#85e0a3' : '#ffb4ab';
+              }
+            },
+            backgroundColor: 'rgba(218, 196, 147, 0.08)',
+            borderWidth: 2,
+            pointBackgroundColor: ctx => {
+                const val = ctx.raw;
+                return val >= 1.0 ? '#85e0a3' : '#ffb4ab';
+            },
+            pointRadius: 3,
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#8e9192', font: { family: 'EB Garamond', size: 10 } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#8e9192', font: { family: 'EB Garamond', size: 10 } }
+            }
+          }
+        }
+      });
     }
   </script>
 </body>
