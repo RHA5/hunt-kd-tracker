@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Тест Парсера Bayou Ledger</title>
+
+<!-- Шрифты -->
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
+<!-- Supabase SDK & Config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "background": "#141313",
+          "tertiary": "#dac493"
+        },
+        fontFamily: {
+          "garamond": ["EB Garamond", "serif"],
+          "forum": ["Forum", "serif"],
+          "courier": ["Courier Prime", "monospace"]
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  body {
+    background-color: #141313;
+    color: #e5e2e1;
+    font-family: 'EB Garamond', serif;
+    padding: 20px;
+  }
+  .victorian-card {
+    border: 1px solid #57524a;
+    background-color: rgba(24, 22, 21, 0.92);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+  }
+  .header-font { font-family: 'Forum', serif; }
+  
+  .hunt-btn-main {
+    width: 280px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #26201b 0%, #171411 100%);
+    border: 2px solid #8c734b;
+    color: #d9c39c;
+    font-family: 'Forum', serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+  }
+  .hunt-btn-main.active {
+    background: linear-gradient(180deg, #360a0a 0%, #1a0303 100%);
+    border-color: #ff4d4d;
+    color: #ffdad6;
+  }
+  .log-row {
+    border-bottom: 1px dashed #57524a;
+    padding: 8px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="max-w-5xl mx-auto space-y-6">
+  <div class="text-center">
+    <h1 class="header-font text-3xl text-tertiary mb-2">РЕЖИМ ТЕСТИРОВАНИЯ ПАРСЕРА</h1>
+    <p class="text-gray-400">Сначала нажми "Начать охоту" в основной админке, затем включай парсер здесь.</p>
+  </div>
+
+  <div class="flex flex-col items-center gap-4">
+    <div id="sessionStatus" class="header-font text-xl text-yellow-500">Поиск активной сессии...</div>
+    <button id="toggleBtn" class="hunt-btn-main opacity-50 cursor-not-allowed" disabled onclick="toggleParser()">
+      ВКЛЮЧИТЬ ПАРСЕР
+    </button>
+    <div id="parserStatus" class="text-sm text-gray-400">Парсер остановлен.</div>
+  </div>
+
+  <div class="mt-8">
+    <div class="victorian-card p-6 w-full max-w-4xl mx-auto">
+      <h2 class="header-font text-2xl text-tertiary mb-4 border-b border-[#57524a] pb-2 text-center">СРАВНЕНИЕ МАТЧЕЙ И ЗАДЕРЖКА</h2>
+      <div id="unifiedLogs" class="space-y-4 h-[500px] overflow-y-auto pr-2">
+        <div class="text-gray-500 text-center mt-10">Ждем записей...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentSessionId = null;
+  let isParsing = false;
+  let pollInterval = null;
+
+  async function init() {
+    await checkActiveSession();
+    // Обновляем списки логов каждые 5 секунд
+    setInterval(updateLogs, 5000);
+    // Проверяем статус сессии раз в 10 секунд (вдруг её закрыли в админке)
+    setInterval(checkActiveSession, 10000);
+  }
+
+  async function checkActiveSession() {
+    try {
+      const { data } = await window.supabase
+        .from('sessions')
+        .select('id, is_active')
+        .eq('is_active', true)
+        .order('start_time', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const statusEl = document.getElementById('sessionStatus');
+      const btn = document.getElementById('toggleBtn');
+
+      if (data) {
+        currentSessionId = data.id;
+        statusEl.innerText = "Активная сессия найдена! Можно запускать.";
+        statusEl.className = "header-font text-xl text-green-500";
+        if (!isParsing) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      } else {
+        currentSessionId = null;
+        statusEl.innerText = "Нет активной сессии (запусти её в admin.html)";
+        statusEl.className = "header-font text-xl text-red-500";
+        if (isParsing) {
+          toggleParser(); // Автоматически выключаем парсер, если сессия закрыта
+        }
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function toggleParser() {
+    if (!currentSessionId) return;
+    const btn = document.getElementById('toggleBtn');
+    
+    if (isParsing) {
+      // Остановка
+      isParsing = false;
+      clearInterval(pollInterval);
+      btn.innerText = 'ВКЛЮЧИТЬ ПАРСЕР';
+      btn.classList.remove('active');
+      document.getElementById('parserStatus').innerText = "Парсер остановлен.";
+    } else {
+      // Запуск
+      isParsing = true;
+      btn.innerText = 'ОСТАНОВИТЬ ПАРСЕР';
+      btn.classList.add('active');
+      
+      // Сразу вызываем функцию, затем каждые 60 секунд
+      invokeParser();
+      pollInterval = setInterval(invokeParser, 60000);
+    }
+  }
+
+  async function invokeParser() {
+    const statusEl = document.getElementById('parserStatus');
+    statusEl.innerText = "⏳ Опрос серверов Supabase... " + new Date().toLocaleTimeString();
+    
+    try {
+      const { data, error } = await window.supabase.functions.invoke('bayou-parser', {
+        body: { session_id: currentSessionId }
+      });
+      
+      if (error) throw error;
+      
+      statusEl.innerText = "✅ " + data.message + " (" + new Date().toLocaleTimeString() + ")";
+    } catch (err) {
+      console.error(err);
+      statusEl.innerText = "❌ Ошибка парсера: " + err.message;
+    }
+  }
+
+  async function updateLogs() {
+    if (!currentSessionId) return;
+
+    // 1. Получаем ручные записи (по возрастанию времени, чтобы КАТКА 1 была первой)
+    const { data: manualData } = await window.supabase
+      .from('matches')
+      .select('created_at, kills, deaths')
+      .eq('session_id', currentSessionId)
+      .order('created_at', { ascending: true });
+
+    // 2. Получаем записи парсера
+    const { data: rawAutoData } = await window.supabase
+      .from('test_parser_log')
+      .select('created_at, kills_delta, deaths_delta')
+      .eq('session_id', currentSessionId)
+      .order('created_at', { ascending: true });
+
+    // Фильтруем самую первую техническую запись парсера (где нули)
+    const autoData = (rawAutoData || []).filter(row => row.kills_delta > 0 || row.deaths_delta > 0);
+
+    renderUnifiedLogs(manualData || [], autoData);
+  }
+
+  function renderUnifiedLogs(manualData, autoData) {
+    const container = document.getElementById('unifiedLogs');
+    const maxMatches = Math.max(manualData.length, autoData.length);
+
+    if (maxMatches === 0) {
+      container.innerHTML = '<div class="text-gray-500 text-center mt-10">Пока нет завершенных матчей...</div>';
+      return;
+    }
+
+    let html = '';
+
+    // Идем в обратном порядке, чтобы новые катки были сверху
+    for (let i = maxMatches - 1; i >= 0; i--) {
+      const matchNum = i + 1;
+      const manual = manualData[i];
+      const auto = autoData[i];
+
+      let delayHtml = '<span class="text-gray-500">Ожидание данных от парсера...</span>';
+      let manualHtml = '<span class="text-gray-500">Нет данных</span>';
+      let autoHtml = '<span class="text-gray-500">Нет данных</span>';
+      let accuracyHtml = '';
+
+      if (manual) {
+        const time = new Date(manual.created_at).toLocaleTimeString();
+        manualHtml = `[${time}] Убийств: <b class="text-white">${manual.kills}</b>, Смертей: <b class="text-white">${manual.deaths}</b>`;
+      }
+
+      if (auto) {
+        const time = new Date(auto.created_at).toLocaleTimeString();
+        autoHtml = `[${time}] Убийств: <b class="text-white">${auto.kills_delta}</b>, Смертей: <b class="text-white">${auto.deaths_delta}</b>`;
+      }
+
+      if (manual && auto) {
+        const diffMs = new Date(auto.created_at) - new Date(manual.created_at);
+        if (diffMs > 0) {
+          const mins = Math.floor(diffMs / 60000);
+          const secs = Math.floor((diffMs % 60000) / 1000);
+          delayHtml = `<span class="text-gray-400">Задержка автоматики:</span> <span class="font-bold text-yellow-500">${mins} мин ${secs} сек</span>`;
+        } else {
+          delayHtml = `<span class="text-gray-400">Задержка автоматики:</span> <span class="font-bold text-green-500">Парсер сработал раньше ручного ввода!</span>`;
+        }
+
+        // Проверка на совпадение данных
+        if (manual.kills === auto.kills_delta && manual.deaths === auto.deaths_delta) {
+          accuracyHtml = `<div class="mt-1 text-green-500 text-xs">✓ Данные парсера точно совпадают с ручными</div>`;
+        } else {
+          accuracyHtml = `<div class="mt-1 text-red-500 text-xs">⚠ Внимание: данные парсера отличаются от ручных!</div>`;
+        }
+      }
+
+      html += `
+        <div class="border border-[#57524a] bg-[#1a1817] p-4 rounded mb-4">
+          <h3 class="header-font text-xl text-white mb-3 border-b border-gray-700 pb-1">КАТКА ${matchNum}</h3>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div class="text-tertiary text-sm mb-1">Твой ручной ввод:</div>
+              <div class="font-courier text-gray-300 text-sm">
+                ${manualHtml}
+              </div>
+            </div>
+            
+            <div>
+              <div class="text-red-400 text-sm mb-1">Ответ от парсера:</div>
+              <div class="font-courier text-gray-300 text-sm">
+                ${autoHtml}
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-4 text-center text-sm bg-black/40 py-2 rounded">
+            ${delayHtml}
+            ${accuracyHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+  }
+
+  // Запуск при загрузке
+  window.addEventListener('load', init);
+</script>
+
+</body>
+</html>
