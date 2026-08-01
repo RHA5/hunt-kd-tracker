@@ -87,6 +87,9 @@
       ВКЛЮЧИТЬ ПАРСЕР
     </button>
     <div id="parserStatus" class="text-sm text-gray-400">Парсер остановлен.</div>
+    <button onclick="exportData()" class="text-xs text-[#dac493] border border-[#57524a] px-3 py-1 rounded hover:bg-[#dac493] hover:text-black transition">
+      Скачать лог для анализа
+    </button>
   </div>
 
   <div class="mt-8">
@@ -103,6 +106,7 @@
   let currentSessionId = null;
   let isParsing = false;
   let pollInterval = null;
+  let exportedEvents = []; // Храним события для экспорта
 
   async function init() {
     await checkActiveSession();
@@ -231,6 +235,8 @@
     let manualTotalK = 0, manualTotalD = 0;
     let autoTotalK = 0, autoTotalD = 0;
     
+    exportedEvents = []; // Очищаем для нового рендера
+    
     allEvents.forEach(ev => {
         if (ev.type === 'manual') {
             manualTotalK += ev.kills;
@@ -243,6 +249,7 @@
             ev.runK = autoTotalK;
             ev.runD = autoTotalD;
         }
+        exportedEvents.push(ev);
     });
 
     // Разворачиваем, чтобы новые события были сверху
@@ -291,6 +298,36 @@
 
     html += '</div>';
     container.innerHTML = html;
+  }
+
+  function exportData() {
+    if (exportedEvents.length === 0) {
+        alert("Нет данных для выгрузки!");
+        return;
+    }
+    
+    let text = "=== ОТЧЕТ ТЕСТИРОВАНИЯ ПАРСЕРА ===\n";
+    text += "Сессия: " + currentSessionId + "\n";
+    text += "Сгенерировано: " + new Date().toLocaleString() + "\n\n";
+    
+    exportedEvents.forEach(ev => {
+        const timeStr = ev.time.toLocaleString();
+        if (ev.type === 'manual') {
+            text += `[${timeStr}] РУЧНОЙ ВВОД: +${ev.kills} киллов, +${ev.deaths} смертей (Всего: ${ev.runK}/${ev.runD})\n`;
+        } else {
+            text += `[${timeStr}] ПАРСЕР: +${ev.kills} киллов, +${ev.deaths} смертей (Всего: ${ev.runK}/${ev.runD})\n`;
+        }
+    });
+
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `parser_log_${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   // Запуск при загрузке
