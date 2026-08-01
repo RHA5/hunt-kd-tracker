@@ -1,102 +1,63 @@
 <!DOCTYPE html>
-<html class="dark" lang="ru">
+<html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>Тест Парсера Bayou Ledger</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тест Парсера Bayou</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Forum&display=swap" rel="stylesheet">
 
-<!-- Шрифты -->
-<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Forum&family=Special+Elite&display=swap" rel="stylesheet">
 <!-- Supabase SDK & Config -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script>
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        colors: {
-          "background": "#141313",
-          "tertiary": "#dac493"
-        },
-        fontFamily: {
-          "garamond": ["EB Garamond", "serif"],
-          "forum": ["Forum", "serif"],
-          "courier": ["Courier Prime", "monospace"]
-        }
-      }
-    }
-  }
-</script>
 
 <style>
   body {
-    background-color: #141313;
-    color: #e5e2e1;
-    font-family: 'EB Garamond', serif;
-    padding: 20px;
+    background-color: #0a0a0a;
+    color: #e5e7eb;
+    font-family: 'Courier Prime', monospace;
+    padding: 2rem;
   }
-  .victorian-card {
-    border: 1px solid #57524a;
-    background-color: rgba(24, 22, 21, 0.92);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
-  }
-  .header-font { font-family: 'Forum', serif; }
-  
-  .hunt-btn-main {
-    width: 280px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    text-transform: uppercase;
-    background: linear-gradient(180deg, #26201b 0%, #171411 100%);
-    border: 2px solid #8c734b;
-    color: #d9c39c;
+  .header-font {
     font-family: 'Forum', serif;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    transition: all 0.3s;
+    letter-spacing: 0.05em;
   }
-  .hunt-btn-main.active {
-    background: linear-gradient(180deg, #360a0a 0%, #1a0303 100%);
-    border-color: #ff4d4d;
-    color: #ffdad6;
+  .text-tertiary { color: #dac493; }
+  .victorian-card {
+    background: linear-gradient(180deg, #1f1c18 0%, #141210 100%);
+    border: 1px solid #57524a;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
   }
-  .log-row {
-    border-bottom: 1px dashed #57524a;
-    padding: 8px 0;
-  }
+  
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #141210; }
+  ::-webkit-scrollbar-thumb { background: #57524a; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #dac493; }
 </style>
 </head>
 <body>
 
 <div class="max-w-5xl mx-auto space-y-6">
   <div class="text-center">
-    <h1 class="header-font text-3xl text-tertiary mb-2">РЕЖИМ ТЕСТИРОВАНИЯ ПАРСЕРА</h1>
-    <p class="text-gray-400">Сначала нажми "Начать охоту" в основной админке, затем включай парсер здесь.</p>
+    <h1 class="header-font text-3xl text-tertiary mb-2">МОНИТОР ПАРСЕРА</h1>
+    <p class="text-gray-400">Парсер работает автоматически на сервере. Эта страница просто показывает логи.</p>
   </div>
 
   <div class="flex flex-col items-center gap-4">
-    <div id="sessionStatus" class="header-font text-xl text-yellow-500">Поиск активной сессии...</div>
-    <button id="toggleBtn" class="hunt-btn-main opacity-50 cursor-not-allowed" disabled onclick="toggleParser()">
-      ВКЛЮЧИТЬ ПАРСЕР
-    </button>
-    <div id="parserStatus" class="text-sm text-gray-400">Парсер остановлен.</div>
+    <div id="sessionStatus" class="header-font text-xl text-yellow-500">Поиск последней сессии...</div>
+    <div class="text-sm text-gray-500" id="sessionTimeInfo"></div>
+    
     <button onclick="exportData()" class="text-xs text-[#dac493] border border-[#57524a] px-3 py-1 rounded hover:bg-[#dac493] hover:text-black transition">
-      Скачать лог для анализа
+      Скачать лог текущей сессии
     </button>
   </div>
 
   <div class="mt-8">
     <div class="victorian-card p-6 w-full max-w-4xl mx-auto">
-      <h2 class="header-font text-2xl text-tertiary mb-4 border-b border-[#57524a] pb-2 text-center">СРАВНЕНИЕ МАТЧЕЙ И ЗАДЕРЖКА</h2>
-      <div id="unifiedLogs" class="space-y-4 h-[500px] overflow-y-auto pr-2">
-        <div class="text-gray-500 text-center mt-10">Ждем записей...</div>
+      <h2 class="header-font text-2xl text-tertiary mb-4 border-b border-[#57524a] pb-2 text-center">ХРОНОЛОГИЯ МАТЧЕЙ И ПАРСЕРА</h2>
+      <div id="unifiedLogs" class="space-y-4 h-[600px] overflow-y-auto pr-2">
+        <div class="text-gray-500 text-center mt-10">Загрузка данных...</div>
       </div>
     </div>
   </div>
@@ -104,170 +65,136 @@
 
 <script>
   let currentSessionId = null;
-  let isParsing = false;
-  let pollInterval = null;
-  let gracePeriodTimer = null;
-  let exportedEvents = []; // Храним события для экспорта
+  let exportedEvents = []; 
+  
+  // Throttle timer for reloading logs so we don't spam requests when many events fire at once
+  let reloadTimer = null; 
 
   async function init() {
-    await checkActiveSession();
-    // Обновляем списки логов каждые 5 секунд
-    setInterval(updateLogs, 5000);
-    // Проверяем статус сессии раз в 10 секунд (вдруг её закрыли в админке)
-    setInterval(checkActiveSession, 10000);
+    await findLatestSession();
+    
+    // Слушаем создание новых сессий (чтобы автоматически переключаться на них)
+    window.supabase
+        .channel('public:sessions')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sessions' }, payload => {
+            console.log("Новая сессия обнаружена! Переключаемся...", payload);
+            findLatestSession();
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sessions' }, payload => {
+            if (payload.new.id === currentSessionId) {
+                updateSessionStatusUI(payload.new);
+            }
+        })
+        .subscribe();
+        
+    // Слушаем изменения в матчах и логах парсера
+    window.supabase
+        .channel('public:matches_and_logs')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, payload => {
+            if(payload.new.session_id === currentSessionId) scheduleReload();
+        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'test_parser_log' }, payload => {
+            if(payload.new.session_id === currentSessionId) scheduleReload();
+        })
+        .subscribe();
   }
 
-  async function checkActiveSession() {
+  function scheduleReload() {
+      if(reloadTimer) clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(() => {
+          fetchAndRenderLogs();
+      }, 500); // debounce 500ms
+  }
+
+  async function findLatestSession() {
     try {
+      // Ищем самую последнюю сессию (неважно, активна или закрыта)
       const { data } = await window.supabase
         .from('sessions')
-        .select('id, is_active')
-        .eq('is_active', true)
+        .select('*')
         .order('start_time', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      const statusEl = document.getElementById('sessionStatus');
-      const btn = document.getElementById('toggleBtn');
-
       if (data) {
         currentSessionId = data.id;
-        statusEl.innerText = "Активная сессия найдена! Можно запускать.";
-        statusEl.className = "header-font text-xl text-green-500";
-        if (!isParsing && !gracePeriodTimer) {
-          btn.disabled = false;
-          btn.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
+        updateSessionStatusUI(data);
+        await fetchAndRenderLogs();
       } else {
-        // Сессия была активна, но теперь закрыта
-        if (isParsing && currentSessionId && !gracePeriodTimer) {
-          startGracePeriod();
-        } else if (!isParsing && !gracePeriodTimer) {
-          currentSessionId = null;
-          statusEl.innerText = "Нет активной сессии (запусти её в admin.html)";
-          statusEl.className = "header-font text-xl text-red-500";
-          btn.disabled = true;
-          btn.classList.add('opacity-50', 'cursor-not-allowed');
-        }
+        document.getElementById('sessionStatus').innerText = "В базе нет ни одной сессии.";
+        document.getElementById('sessionStatus').className = "header-font text-xl text-red-500";
+        document.getElementById('unifiedLogs').innerHTML = '<div class="text-gray-500 text-center mt-10">Пусто...</div>';
       }
     } catch (e) {
       console.error(e);
     }
   }
 
-  function startGracePeriod() {
-    const statusEl = document.getElementById('sessionStatus');
-    statusEl.innerText = "Сессия закрыта в админке. Включен режим докачки (10 минут)... Не закрывайте эту вкладку!";
-    statusEl.className = "header-font text-xl text-yellow-500";
-    
-    document.getElementById('toggleBtn').disabled = true;
-    document.getElementById('toggleBtn').classList.add('opacity-50', 'cursor-not-allowed');
-    
-    let minutesLeft = 10;
-    
-    gracePeriodTimer = setInterval(() => {
-      minutesLeft--;
-      if (minutesLeft <= 0) {
-        clearInterval(gracePeriodTimer);
-        gracePeriodTimer = null;
-        if (isParsing) toggleParser(); // Выключаем парсер окончательно
-        currentSessionId = null;
+  function updateSessionStatusUI(sessionData) {
+      const statusEl = document.getElementById('sessionStatus');
+      const timeInfoEl = document.getElementById('sessionTimeInfo');
+      
+      const startTime = new Date(sessionData.start_time).toLocaleString();
+      
+      if (sessionData.is_active) {
+          statusEl.innerText = "СЕССИЯ АКТИВНА И ПАРСИТСЯ СЕРВЕРОМ";
+          statusEl.className = "header-font text-xl text-green-500";
+          timeInfoEl.innerText = "Начата: " + startTime;
       } else {
-        statusEl.innerText = `Сессия закрыта. Режим докачки: осталось ${minutesLeft} мин. Не закрывайте вкладку!`;
+          statusEl.innerText = "СЕССИЯ ЗАКРЫТА";
+          statusEl.className = "header-font text-xl text-gray-500";
+          let endText = sessionData.end_time ? new Date(sessionData.end_time).toLocaleString() : "Неизвестно";
+          timeInfoEl.innerText = "Начата: " + startTime + " | Закрыта: " + endText;
       }
-    }, 60000);
   }
 
-  function toggleParser() {
+  async function fetchAndRenderLogs() {
     if (!currentSessionId) return;
-    const btn = document.getElementById('toggleBtn');
-    
-    if (isParsing) {
-      // Остановка
-      isParsing = false;
-      clearInterval(pollInterval);
-      if (gracePeriodTimer) {
-         clearInterval(gracePeriodTimer);
-         gracePeriodTimer = null;
-      }
-      btn.innerText = 'ВКЛЮЧИТЬ ПАРСЕР';
-      btn.classList.remove('active');
-      document.getElementById('parserStatus').innerText = "Парсер остановлен.";
-      document.getElementById('sessionStatus').innerText = "Нет активной сессии (запусти её в admin.html)";
-      document.getElementById('sessionStatus').className = "header-font text-xl text-red-500";
-    } else {
-      // Запуск
-      isParsing = true;
-      btn.innerText = 'ОСТАНОВИТЬ ПАРСЕР';
-      btn.classList.add('active');
-      
-      // Сразу вызываем функцию, затем каждые 60 секунд
-      invokeParser();
-      pollInterval = setInterval(invokeParser, 60000);
-    }
-  }
 
-  async function invokeParser() {
-    const statusEl = document.getElementById('parserStatus');
-    statusEl.innerText = "⏳ Опрос серверов Supabase... " + new Date().toLocaleTimeString();
-    
     try {
-      const { data, error } = await window.supabase.functions.invoke('bayou-parser', {
-        body: { session_id: currentSessionId }
-      });
-      
-      if (error) throw error;
-      
-      statusEl.innerText = "✅ " + data.message + " (" + new Date().toLocaleTimeString() + ")";
-    } catch (err) {
-      console.error(err);
-      statusEl.innerText = "❌ Ошибка парсера: " + err.message;
+      // Ручной ввод
+      const { data: manualData } = await window.supabase
+        .from('matches')
+        .select('*')
+        .eq('session_id', currentSessionId)
+        .order('created_at', { ascending: true });
+
+      // Ответы парсера
+      const { data: autoData } = await window.supabase
+        .from('test_parser_log')
+        .select('*')
+        .eq('session_id', currentSessionId)
+        .gt('kills_delta', -1) // Чтобы не брать инициализирующий нуль, если он есть
+        .gt('deaths_delta', -1)
+        .order('created_at', { ascending: true });
+        
+      // Фильтруем пустые куски от парсера (где 0/0)
+      const filteredAutoData = autoData ? autoData.filter(a => a.kills_delta > 0 || a.deaths_delta > 0) : [];
+
+      renderUnifiedLogs(manualData || [], filteredAutoData);
+    } catch (e) {
+      console.error(e);
     }
-  }
-
-  async function updateLogs() {
-    if (!currentSessionId) return;
-
-    // 1. Получаем ручные записи (по возрастанию времени, чтобы КАТКА 1 была первой)
-    const { data: manualData } = await window.supabase
-      .from('matches')
-      .select('created_at, kills, deaths')
-      .eq('session_id', currentSessionId)
-      .order('created_at', { ascending: true });
-
-    // 2. Получаем записи парсера
-    const { data: rawAutoData } = await window.supabase
-      .from('test_parser_log')
-      .select('created_at, kills_delta, deaths_delta')
-      .eq('session_id', currentSessionId)
-      .order('created_at', { ascending: true });
-
-    // Фильтруем самую первую техническую запись парсера (где нули)
-    const autoData = (rawAutoData || []).filter(row => row.kills_delta > 0 || row.deaths_delta > 0);
-
-    renderUnifiedLogs(manualData || [], autoData);
   }
 
   function renderUnifiedLogs(manualData, autoData) {
     const container = document.getElementById('unifiedLogs');
     
     if (manualData.length === 0 && autoData.length === 0) {
-      container.innerHTML = '<div class="text-gray-500 text-center mt-10">Пока нет записей...</div>';
+      container.innerHTML = '<div class="text-gray-500 text-center mt-10">Пока нет записей в этой сессии...</div>';
       return;
     }
 
-    // Объединяем события в один массив с пометкой типа
     const allEvents = [];
     manualData.forEach(m => allEvents.push({ type: 'manual', time: new Date(m.created_at), kills: m.kills, deaths: m.deaths }));
     autoData.forEach(a => allEvents.push({ type: 'auto', time: new Date(a.created_at), kills: a.kills_delta, deaths: a.deaths_delta }));
 
-    // Сортируем от старых к новым для подсчета накопительной суммы
     allEvents.sort((a, b) => a.time - b.time);
 
     let manualTotalK = 0, manualTotalD = 0;
     let autoTotalK = 0, autoTotalD = 0;
     
-    exportedEvents = []; // Очищаем для нового рендера
+    exportedEvents = []; 
     
     allEvents.forEach(ev => {
         if (ev.type === 'manual') {
@@ -284,11 +211,10 @@
         exportedEvents.push(ev);
     });
 
-    // Разворачиваем, чтобы новые события были сверху
     allEvents.reverse();
 
     let html = `
-      <div class="flex justify-around mb-6 bg-black/50 p-4 rounded border border-gray-700 shadow-inner">
+      <div class="flex justify-around mb-6 bg-black/50 p-4 rounded border border-gray-700 shadow-inner sticky top-0 z-10 backdrop-blur-md">
          <div class="text-center">
             <div class="text-tertiary text-sm font-forum uppercase tracking-widest mb-1">Сумма (Ручной ввод)</div>
             <div class="text-3xl text-white font-bold">${manualTotalK} <span class="text-gray-500 text-xl">/</span> ${manualTotalD}</div>
@@ -298,7 +224,7 @@
             <div class="text-3xl text-white font-bold">${autoTotalK} <span class="text-gray-500 text-xl">/</span> ${autoTotalD}</div>
          </div>
       </div>
-      <div class="relative border-l-2 border-[#57524a] ml-4 pl-6 space-y-6 font-courier">
+      <div class="relative border-l-2 border-[#57524a] ml-4 pl-6 space-y-6 font-courier pb-10">
     `;
 
     allEvents.forEach(ev => {
@@ -362,9 +288,7 @@
     URL.revokeObjectURL(url);
   }
 
-  // Запуск при загрузке
   window.addEventListener('load', init);
 </script>
-
 </body>
 </html>
