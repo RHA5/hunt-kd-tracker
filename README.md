@@ -71,6 +71,8 @@
 *   `kills` / `deaths` / `matches_count` — Статистика за конкретный стрим.
 *   `is_active` (BOOLEAN) — Флаг текущей сессии.
 *   `condition_rating` (INT) — Самочувствие стримера (1-10).
+*   `comment` (TEXT) — Заметки стримера о сессии.
+*   `loadout` (TEXT) — Используемое оружие в рамках этой сессии.
 
 ### 3. matches (Лог матчей)
 *   `session_id` (UUID) — Связь с таблицей `sessions`.
