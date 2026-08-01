@@ -106,6 +106,7 @@
   let currentSessionId = null;
   let isParsing = false;
   let pollInterval = null;
+  let gracePeriodTimer = null;
   let exportedEvents = []; // Храним события для экспорта
 
   async function init() {
@@ -133,23 +134,48 @@
         currentSessionId = data.id;
         statusEl.innerText = "Активная сессия найдена! Можно запускать.";
         statusEl.className = "header-font text-xl text-green-500";
-        if (!isParsing) {
+        if (!isParsing && !gracePeriodTimer) {
           btn.disabled = false;
           btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
       } else {
-        currentSessionId = null;
-        statusEl.innerText = "Нет активной сессии (запусти её в admin.html)";
-        statusEl.className = "header-font text-xl text-red-500";
-        if (isParsing) {
-          toggleParser(); // Автоматически выключаем парсер, если сессия закрыта
+        // Сессия была активна, но теперь закрыта
+        if (isParsing && currentSessionId && !gracePeriodTimer) {
+          startGracePeriod();
+        } else if (!isParsing && !gracePeriodTimer) {
+          currentSessionId = null;
+          statusEl.innerText = "Нет активной сессии (запусти её в admin.html)";
+          statusEl.className = "header-font text-xl text-red-500";
+          btn.disabled = true;
+          btn.classList.add('opacity-50', 'cursor-not-allowed');
         }
-        btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
       }
     } catch (e) {
       console.error(e);
     }
+  }
+
+  function startGracePeriod() {
+    const statusEl = document.getElementById('sessionStatus');
+    statusEl.innerText = "Сессия закрыта в админке. Включен режим докачки (10 минут)... Не закрывайте эту вкладку!";
+    statusEl.className = "header-font text-xl text-yellow-500";
+    
+    document.getElementById('toggleBtn').disabled = true;
+    document.getElementById('toggleBtn').classList.add('opacity-50', 'cursor-not-allowed');
+    
+    let minutesLeft = 10;
+    
+    gracePeriodTimer = setInterval(() => {
+      minutesLeft--;
+      if (minutesLeft <= 0) {
+        clearInterval(gracePeriodTimer);
+        gracePeriodTimer = null;
+        if (isParsing) toggleParser(); // Выключаем парсер окончательно
+        currentSessionId = null;
+      } else {
+        statusEl.innerText = `Сессия закрыта. Режим докачки: осталось ${minutesLeft} мин. Не закрывайте вкладку!`;
+      }
+    }, 60000);
   }
 
   function toggleParser() {
@@ -160,9 +186,15 @@
       // Остановка
       isParsing = false;
       clearInterval(pollInterval);
+      if (gracePeriodTimer) {
+         clearInterval(gracePeriodTimer);
+         gracePeriodTimer = null;
+      }
       btn.innerText = 'ВКЛЮЧИТЬ ПАРСЕР';
       btn.classList.remove('active');
       document.getElementById('parserStatus').innerText = "Парсер остановлен.";
+      document.getElementById('sessionStatus').innerText = "Нет активной сессии (запусти её в admin.html)";
+      document.getElementById('sessionStatus').className = "header-font text-xl text-red-500";
     } else {
       // Запуск
       isParsing = true;
