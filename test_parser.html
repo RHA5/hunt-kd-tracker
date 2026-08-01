@@ -214,82 +214,82 @@
 
   function renderUnifiedLogs(manualData, autoData) {
     const container = document.getElementById('unifiedLogs');
-    const maxMatches = Math.max(manualData.length, autoData.length);
-
-    if (maxMatches === 0) {
-      container.innerHTML = '<div class="text-gray-500 text-center mt-10">Пока нет завершенных матчей...</div>';
+    
+    if (manualData.length === 0 && autoData.length === 0) {
+      container.innerHTML = '<div class="text-gray-500 text-center mt-10">Пока нет записей...</div>';
       return;
     }
 
-    let html = '';
+    // Объединяем события в один массив с пометкой типа
+    const allEvents = [];
+    manualData.forEach(m => allEvents.push({ type: 'manual', time: new Date(m.created_at), kills: m.kills, deaths: m.deaths }));
+    autoData.forEach(a => allEvents.push({ type: 'auto', time: new Date(a.created_at), kills: a.kills_delta, deaths: a.deaths_delta }));
 
-    // Идем в обратном порядке, чтобы новые катки были сверху
-    for (let i = maxMatches - 1; i >= 0; i--) {
-      const matchNum = i + 1;
-      const manual = manualData[i];
-      const auto = autoData[i];
+    // Сортируем от старых к новым для подсчета накопительной суммы
+    allEvents.sort((a, b) => a.time - b.time);
 
-      let delayHtml = '<span class="text-gray-500">Ожидание данных от парсера...</span>';
-      let manualHtml = '<span class="text-gray-500">Нет данных</span>';
-      let autoHtml = '<span class="text-gray-500">Нет данных</span>';
-      let accuracyHtml = '';
-
-      if (manual) {
-        const time = new Date(manual.created_at).toLocaleTimeString();
-        manualHtml = `[${time}] Убийств: <b class="text-white">${manual.kills}</b>, Смертей: <b class="text-white">${manual.deaths}</b>`;
-      }
-
-      if (auto) {
-        const time = new Date(auto.created_at).toLocaleTimeString();
-        autoHtml = `[${time}] Убийств: <b class="text-white">${auto.kills_delta}</b>, Смертей: <b class="text-white">${auto.deaths_delta}</b>`;
-      }
-
-      if (manual && auto) {
-        const diffMs = new Date(auto.created_at) - new Date(manual.created_at);
-        if (diffMs > 0) {
-          const mins = Math.floor(diffMs / 60000);
-          const secs = Math.floor((diffMs % 60000) / 1000);
-          delayHtml = `<span class="text-gray-400">Задержка автоматики:</span> <span class="font-bold text-yellow-500">${mins} мин ${secs} сек</span>`;
+    let manualTotalK = 0, manualTotalD = 0;
+    let autoTotalK = 0, autoTotalD = 0;
+    
+    allEvents.forEach(ev => {
+        if (ev.type === 'manual') {
+            manualTotalK += ev.kills;
+            manualTotalD += ev.deaths;
+            ev.runK = manualTotalK;
+            ev.runD = manualTotalD;
         } else {
-          delayHtml = `<span class="text-gray-400">Задержка автоматики:</span> <span class="font-bold text-green-500">Парсер сработал раньше ручного ввода!</span>`;
+            autoTotalK += ev.kills;
+            autoTotalD += ev.deaths;
+            ev.runK = autoTotalK;
+            ev.runD = autoTotalD;
         }
+    });
 
-        // Проверка на совпадение данных
-        if (manual.kills === auto.kills_delta && manual.deaths === auto.deaths_delta) {
-          accuracyHtml = `<div class="mt-1 text-green-500 text-xs">✓ Данные парсера точно совпадают с ручными</div>`;
-        } else {
-          accuracyHtml = `<div class="mt-1 text-red-500 text-xs">⚠ Внимание: данные парсера отличаются от ручных!</div>`;
-        }
+    // Разворачиваем, чтобы новые события были сверху
+    allEvents.reverse();
+
+    let html = `
+      <div class="flex justify-around mb-6 bg-black/50 p-4 rounded border border-gray-700 shadow-inner">
+         <div class="text-center">
+            <div class="text-tertiary text-sm font-forum uppercase tracking-widest mb-1">Сумма (Ручной ввод)</div>
+            <div class="text-3xl text-white font-bold">${manualTotalK} <span class="text-gray-500 text-xl">/</span> ${manualTotalD}</div>
+         </div>
+         <div class="text-center">
+            <div class="text-red-400 text-sm font-forum uppercase tracking-widest mb-1">Сумма (Парсер)</div>
+            <div class="text-3xl text-white font-bold">${autoTotalK} <span class="text-gray-500 text-xl">/</span> ${autoTotalD}</div>
+         </div>
+      </div>
+      <div class="relative border-l-2 border-[#57524a] ml-4 pl-6 space-y-6 font-courier">
+    `;
+
+    allEvents.forEach(ev => {
+      const timeStr = ev.time.toLocaleTimeString();
+      if (ev.type === 'manual') {
+         html += `
+            <div class="relative">
+               <div class="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-tertiary shadow-[0_0_8px_#dac493]"></div>
+               <div class="border border-[#57524a] bg-[#1a1817] p-4 rounded">
+                  <div class="text-tertiary text-sm font-bold mb-2">РУЧНОЙ ВВОД [${timeStr}]</div>
+                  <div class="text-gray-200">Добавлено: <span class="text-white font-bold text-lg">${ev.kills}</span> убийств, <span class="text-white font-bold text-lg">${ev.deaths}</span> смертей</div>
+                  <div class="text-gray-500 text-xs mt-2 border-t border-gray-800 pt-2">Сумма на этот момент: ${ev.runK} / ${ev.runD}</div>
+               </div>
+            </div>
+         `;
+      } else {
+         html += `
+            <div class="relative">
+               <div class="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></div>
+               <div class="border border-red-900 bg-[#261111] p-4 rounded">
+                  <div class="text-red-400 text-sm font-bold mb-2">ОБНОВЛЕНИЕ ПАРСЕРА [${timeStr}]</div>
+                  <div class="text-gray-200">Пришел кусок: <span class="text-white font-bold text-lg">${ev.kills}</span> убийств, <span class="text-white font-bold text-lg">${ev.deaths}</span> смертей</div>
+                  <div class="text-gray-400 text-xs mt-2 border-t border-red-900/50 pt-2">Сумма на этот момент: ${ev.runK} / ${ev.runD}</div>
+               </div>
+            </div>
+         `;
       }
+    });
 
-      html += `
-        <div class="border border-[#57524a] bg-[#1a1817] p-4 rounded mb-4">
-          <h3 class="header-font text-xl text-white mb-3 border-b border-gray-700 pb-1">КАТКА ${matchNum}</h3>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <div class="text-tertiary text-sm mb-1">Твой ручной ввод:</div>
-              <div class="font-courier text-gray-300 text-sm">
-                ${manualHtml}
-              </div>
-            </div>
-            
-            <div>
-              <div class="text-red-400 text-sm mb-1">Ответ от парсера:</div>
-              <div class="font-courier text-gray-300 text-sm">
-                ${autoHtml}
-              </div>
-            </div>
-          </div>
-          
-          <div class="mt-4 text-center text-sm bg-black/40 py-2 rounded">
-            ${delayHtml}
-            ${accuracyHtml}
-          </div>
-        </div>
-      `;
-    }
-
+    html += '</div>';
     container.innerHTML = html;
   }
 
