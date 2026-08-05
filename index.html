@@ -15,8 +15,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 
-<!-- Chart.js для динамического графика -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ApexCharts для динамического графика -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
 <!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -45,6 +45,33 @@
 
 <style>
   * { box-sizing: border-box; }
+
+  /* ТУЛТИП APEXCHARTS (ПЕЧАТЬ) */
+  .apexcharts-tooltip {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    pointer-events: none !important; 
+    opacity: 0; 
+  }
+  @keyframes stampFade {
+    0% { opacity: 0; filter: blur(4px); transform: rotate(-3deg) scale(1.2); }
+    100% { opacity: 1; filter: blur(0); transform: rotate(0) scale(1); }
+  }
+  .apexcharts-tooltip.tt-wrapper.apexcharts-active { animation: stampFade 0.25s ease-out forwards !important; }
+  .apexcharts-tooltip-title { display: none !important; }
+
+  .tt-design-stamp {
+    background: transparent; padding: 10px; display: flex; justify-content: center;
+  }
+  .tt-design-stamp .tt-value {
+    font-family: 'Special Elite', monospace;
+    font-size: 28px; 
+    color: #dac493;
+    font-weight: bold;
+    text-shadow: 2px 2px 0px #141313, -2px -2px 0px #141313, 2px -2px 0px #141313, -2px 2px 0px #141313, 0px 4px 10px rgba(0,0,0,0.8);
+    transform: rotate(-3deg);
+  }
 
 
   html, body {
@@ -311,8 +338,8 @@
             <span class="font-forum text-[11px] text-tertiary font-bold uppercase tracking-wider">Пульс KD <span onclick="if(window.matchMedia('(pointer: coarse)').matches) alert('Показывает, как менялся средний KD после каждого матча в течение этой сессии.')" title="Показывает, как менялся средний KD после каждого матча в течение этой сессии." class="cursor-help text-[11px] font-sans border border-[#dac493] text-[#dac493] rounded-full w-[15px] h-[15px] inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity ml-1 align-middle mb-[2px]">?</span></span>
           </div>
           <div class="gradient-line mb-2 shrink-0"></div>
-          <div class="w-full flex-grow relative min-h-0">
-            <canvas id="sessionChart"></canvas>
+          <div class="w-full flex-grow relative min-h-0" style="min-height: 250px;">
+            <div id="sessionChart" class="w-full h-full"></div>
           </div>
         </div>
 
@@ -469,48 +496,53 @@
             if (v > maxKD) maxKD = v;
             if (v < minKD) minKD = v;
         });
+        maxKD += 0.2;
+        minKD -= 0.2;
+        if (minKD < 0) minKD = 0;
 
         const getColorForKD = (kd) => {
-            if (kd >= baseKD) {
-                let ratio = maxKD > baseKD ? (kd - baseKD) / (maxKD - baseKD) : 1;
+            if (kd >= targetKD) {
+                let ratio = maxKD > targetKD ? (kd - targetKD) / (maxKD - targetKD) : 1;
                 ratio = Math.min(1, Math.max(0, ratio));
-                return `hsl(120, ${ratio * 100}%, ${62 - 12*ratio}%)`;
+                return `hsl(120, ${Math.round(ratio * 100)}%, ${Math.round(62 - 12*ratio)}%)`;
             } else {
-                let ratio = baseKD > minKD ? (baseKD - kd) / (baseKD - minKD) : 1;
+                let ratio = targetKD > minKD ? (targetKD - kd) / (targetKD - minKD) : 1;
                 ratio = Math.min(1, Math.max(0, ratio));
-                return `hsl(0, ${ratio * 100}%, ${62 - 12*ratio}%)`;
+                return `hsl(0, ${Math.round(ratio * 100)}%, ${Math.round(62 - 12*ratio)}%)`;
             }
         };
 
-        chartInstance.data.labels = ['Старт', ...data.map((_, i) => `Матч ${i+1}`)];
-        
-        // Обновляем датасет на месте, чтобы график не моргал
-        const dataset = chartInstance.data.datasets[0];
-        dataset.data = kdData;
-        dataset.segment = {
-            borderColor: ctx => getColorForKD(ctx.p1 ? ctx.p1.parsed.y : baseKD)
-        };
-        dataset.pointBackgroundColor = kdData.map(y => getColorForKD(y));
-        dataset.pointBorderColor = kdData.map(y => getColorForKD(y));
-
-        // Ватерлиния Цели
-        chartInstance.data.datasets[1] = {
-            label: 'Цель (2.0)',
-            data: Array(kdData.length).fill(targetKD),
-            borderColor: 'rgba(218, 196, 147, 0.4)',
-            borderWidth: 1,
-            borderDash: [5, 5],
-            pointRadius: 0,
-            fill: false,
-            tension: 0
-        };
-
-        // Удаляем третий датасет, если он был
-        if (chartInstance.data.datasets.length > 2) {
-            chartInstance.data.datasets.pop();
+        const colorStops = [];
+        const numStops = 20;
+        for (let i = 0; i <= numStops; i++) {
+            let offset = (i / numStops) * 100;
+            let kdAtOffset = maxKD - (i / numStops) * (maxKD - minKD);
+            colorStops.push({
+                offset: offset,
+                color: getColorForKD(kdAtOffset),
+                opacity: 1
+            });
         }
 
-        chartInstance.update();
+        const labels = ['Старт', ...data.map((_, i) => `Матч ${i+1}`)];
+
+        chartInstance.updateOptions({
+            xaxis: { categories: labels },
+            yaxis: { 
+              max: maxKD, 
+              min: minKD,
+              tooltip: { enabled: false },
+              labels: {
+                style: { colors: '#8e9192', fontFamily: 'Courier Prime, monospace' },
+                formatter: (value) => { return value.toFixed(2) }
+              }
+            },
+            dataLabels: { enabled: false },
+            fill: { type: 'gradient', gradient: { type: 'vertical', shadeIntensity: 1, colorStops: colorStops } },
+            annotations: { yaxis: [{ y: targetKD, borderColor: 'rgba(218, 196, 147, 0.4)', strokeDashArray: 5 }] }
+        });
+        
+        chartInstance.updateSeries([{ name: "KD", data: kdData }]);
       }
     }
 
@@ -727,39 +759,68 @@
     }
 
     function initChart() {
-      const ctx = document.getElementById('sessionChart').getContext('2d');
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Старт', 'Матч 1', 'Матч 2', 'Матч 3', 'Матч 4'],
-          datasets: [{
-            label: 'KD Сессии',
-            data: [0.00, 1.50, 2.00, 1.80, 2.40],
-            borderColor: '#dac493',
-            backgroundColor: 'rgba(218, 196, 147, 0.08)',
-            borderWidth: 2,
-            pointBackgroundColor: '#b5a172',
-            pointRadius: 3,
-            tension: 0.3,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#8e9192', font: { family: 'EB Garamond', size: 10 } }
-            },
-            y: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#8e9192', font: { family: 'EB Garamond', size: 10 } }
+      const options = {
+          series: [{ name: "KD", data: [] }],
+          chart: {
+            height: '100%',
+            type: 'line', 
+            fontFamily: 'EB Garamond, serif',
+            background: 'transparent',
+            toolbar: { show: false },
+            zoom: { enabled: false },
+            animations: { enabled: true, easing: 'easeinout', speed: 800 }
+          },
+          fill: {
+            type: 'gradient',
+            gradient: { type: 'vertical', shadeIntensity: 1, colorStops: [] }
+          },
+          stroke: { curve: 'smooth', width: 3 }, 
+          markers: {
+            size: 4,
+            colors: ['#141313'], 
+            strokeColors: '#57524a',
+            strokeWidth: 2,
+            hover: { size: 6 }
+          },
+          dataLabels: { enabled: false },
+          xaxis: {
+            categories: [],
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+            labels: { style: { colors: '#8e9192', fontFamily: 'Forum, serif', fontSize: '11px' } },
+            tooltip: { enabled: false },
+            crosshairs: { show: false }
+          },
+          yaxis: {
+            tooltip: { enabled: false },
+            labels: {
+              style: { colors: '#8e9192', fontFamily: 'Courier Prime, monospace' },
+              formatter: (value) => { return value.toFixed(2) }
             }
+          },
+          grid: { borderColor: 'rgba(255, 255, 255, 0.05)', strokeDashArray: 4 },
+          theme: { mode: 'dark' },
+          annotations: {
+            yaxis: []
+          },
+          tooltip: {
+            enabled: true,
+            cssClass: 'tt-wrapper',
+            shared: true, 
+            intersect: false, 
+            custom: function({series, seriesIndex, dataPointIndex, w}) {
+              let val = series[seriesIndex][dataPointIndex];
+              if(val !== undefined && val !== null) {
+                return `<div class="tt-design-stamp"><span class="tt-value">${val.toFixed(2)} KD</span></div>`;
+              }
+              return '';
+            },
+            offsetY: -25 
           }
-        }
-      });
+      };
+      
+      chartInstance = new ApexCharts(document.querySelector("#sessionChart"), options);
+      chartInstance.render();
     }
 
     async function goToAnalytics(event) {
@@ -773,5 +834,6 @@
     }
   </script>
 
+<script src="changelog.js"></script>
 </body>
 </html>
