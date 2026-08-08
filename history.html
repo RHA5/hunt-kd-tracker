@@ -287,12 +287,27 @@
       }
       isDataLoading = true;
       try {
-        const { data, error } = await window.supabase
-          .from('sessions')
-          .select('*, matches(id)')
-          .order('start_time', { ascending: false });
-
-        if (error) return console.error(error);
+        let data, error;
+        let success = false;
+        let retries = 3;
+        for (let i = 0; i < retries; i++) {
+          try {
+            const res = await window.supabase
+              .from('sessions')
+              .select('*, matches(id)')
+              .order('start_time', { ascending: false });
+            data = res.data;
+            error = res.error;
+            if (error) throw error; // If supabase returns an error, throw it so it can be retried
+            success = true;
+            break;
+          } catch (err) {
+            if (i === retries - 1) throw err;
+            console.warn(`Запрос упал, пробуем еще раз через секунду... (${i + 1}/${retries})`, err);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+        if (!success) return;
         sessionsData = data;
 
       const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;

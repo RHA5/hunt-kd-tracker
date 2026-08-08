@@ -257,11 +257,25 @@
         }
         isDataLoading = true;
         try {
-            // Загружаем данные параллельно
-            const [profileRes, sessionsRes] = await Promise.all([
-                window.supabase.from('hunter_profile').select('target_kd').single(),
-                window.supabase.from('sessions').select('start_time, kills, deaths, matches_count, condition_rating').order('start_time', { ascending: true })
-            ]);
+            // Загружаем данные параллельно с механизмом повтора при падении (QUIC / RESET)
+            let profileRes, sessionsRes;
+            let success = false;
+            let retries = 3;
+            for (let i = 0; i < retries; i++) {
+              try {
+                [profileRes, sessionsRes] = await Promise.all([
+                    window.supabase.from('hunter_profile').select('target_kd').single(),
+                    window.supabase.from('sessions').select('start_time, kills, deaths, matches_count, condition_rating').order('start_time', { ascending: true })
+                ]);
+                success = true;
+                break;
+              } catch (err) {
+                if (i === retries - 1) throw err;
+                console.warn(`Запрос упал, пробуем еще раз через секунду... (${i + 1}/${retries})`, err);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+              }
+            }
+            if (!success) return; // На случай если throw не сработал
 
             if (profileRes.data && profileRes.data.target_kd) {
                 globalTargetKD = profileRes.data.target_kd;

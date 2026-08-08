@@ -414,6 +414,20 @@
     let pendingLoad = false;
     let realtimeSubscribed = false;
 
+    // Функция для автоматического повтора при сбросе соединения (ERR_QUIC / ERR_CONNECTION_RESET)
+    async function withRetry(fn, retries = 3) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          await fn();
+          return;
+        } catch (err) {
+          if (i === retries - 1) throw err;
+          console.warn(`Запрос упал, пробуем еще раз через секунду... (${i + 1}/${retries})`, err);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+
     async function loadData() {
       if (isDataLoading) {
         pendingLoad = true;
@@ -422,9 +436,9 @@
       isDataLoading = true;
       try {
         await Promise.all([
-          loadGlobalStats(),
-          loadChallengeHistory(),
-          checkActiveSession()
+          withRetry(loadGlobalStats),
+          withRetry(loadChallengeHistory),
+          withRetry(checkActiveSession)
         ]);
         calculateAndRender();
       } catch (err) {
