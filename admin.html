@@ -693,11 +693,6 @@
       }
     }
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        debouncedLoadData();
-      }
-    });
 
     async function loadGlobalStats() {
       const { data, error } = await window.supabase
