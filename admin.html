@@ -631,14 +631,6 @@
       initChart();
       loadData();
       
-      let loadDataTimeout = null;
-      function debouncedLoadData() {
-          if (loadDataTimeout) clearTimeout(loadDataTimeout);
-          loadDataTimeout = setTimeout(() => {
-              loadData();
-          }, 300);
-      }
-
       // Подписка на Realtime изменения
       window.supabase.channel('public:all-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'hunter_profile' }, payload => { debouncedLoadData(); })
@@ -646,6 +638,14 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => { debouncedLoadData(); })
         .subscribe();
     });
+
+    let loadDataTimeout = null;
+    function debouncedLoadData() {
+        if (loadDataTimeout) clearTimeout(loadDataTimeout);
+        loadDataTimeout = setTimeout(() => {
+            loadData();
+        }, 300);
+    }
 
     let isDataLoading = false;
     let pendingLoad = false;
