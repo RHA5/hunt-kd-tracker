@@ -440,6 +440,9 @@
           withRetry(loadChallengeHistory),
           withRetry(checkActiveSession)
         ]);
+        if (currentSession) {
+          await withRetry(loadSessionMatches);
+        }
         calculateAndRender();
       } catch (err) {
         console.error("Ошибка загрузки данных:", err);
@@ -509,7 +512,6 @@
       if (data) {
         currentSession = data;
         startTimer(new Date(currentSession.start_time));
-        loadSessionMatches();
       } else {
         currentSession = null;
         clearInterval(timerInterval);
