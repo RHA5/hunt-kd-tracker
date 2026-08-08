@@ -400,13 +400,6 @@
     document.addEventListener("DOMContentLoaded", function() {
       initChart();
       loadData();
-      
-      // Подписка на Realtime изменения с debounce
-      window.supabase.channel('public:all-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'hunter_profile' }, payload => { debouncedLoadData(); })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, payload => { debouncedLoadData(); })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => { debouncedLoadData(); })
-        .subscribe();
     });
 
     let loadDataTimeout = null;
@@ -419,6 +412,7 @@
 
     let isDataLoading = false;
     let pendingLoad = false;
+    let realtimeSubscribed = false;
 
     async function loadData() {
       if (isDataLoading) {
@@ -427,14 +421,24 @@
       }
       isDataLoading = true;
       try {
-        await loadGlobalStats();
-        await loadChallengeHistory();
-        await checkActiveSession();
+        await Promise.all([
+          loadGlobalStats(),
+          loadChallengeHistory(),
+          checkActiveSession()
+        ]);
         calculateAndRender();
       } catch (err) {
         console.error("Ошибка загрузки данных:", err);
       } finally {
         isDataLoading = false;
+        if (!realtimeSubscribed) {
+          realtimeSubscribed = true;
+          window.supabase.channel('public:all-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'hunter_profile' }, payload => { debouncedLoadData(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, payload => { debouncedLoadData(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => { debouncedLoadData(); })
+            .subscribe();
+        }
         if (pendingLoad) {
           pendingLoad = false;
           debouncedLoadData();

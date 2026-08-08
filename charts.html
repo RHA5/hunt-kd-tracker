@@ -257,22 +257,18 @@
         }
         isDataLoading = true;
         try {
-            // Получаем цель из профиля
-            const { data: profileData } = await window.supabase
-                .from('hunter_profile')
-                .select('target_kd')
-                .single();
-            if (profileData && profileData.target_kd) {
-                globalTargetKD = profileData.target_kd;
+            // Загружаем данные параллельно
+            const [profileRes, sessionsRes] = await Promise.all([
+                window.supabase.from('hunter_profile').select('target_kd').single(),
+                window.supabase.from('sessions').select('start_time, kills, deaths, matches_count, condition_rating').order('start_time', { ascending: true })
+            ]);
+
+            if (profileRes.data && profileRes.data.target_kd) {
+                globalTargetKD = profileRes.data.target_kd;
             }
 
-            // Получаем историю сессий
-            const { data: sessionsData, error } = await window.supabase
-                .from('sessions')
-                .select('start_time, kills, deaths, matches_count, condition_rating')
-                .order('start_time', { ascending: true });
-
-            if (error) throw error;
+            if (sessionsRes.error) throw sessionsRes.error;
+            const sessionsData = sessionsRes.data;
 
             // Фильтруем пустые и считаем KD
             allSessions = sessionsData.filter(s => s.kills != null && s.deaths != null).map((s, index) => {
