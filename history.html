@@ -271,14 +271,29 @@
       return '---';
     }
 
-    async function loadHistory() {
-      const { data, error } = await window.supabase
-        .from('sessions')
-        .select('*, matches(id)')
-        .order('start_time', { ascending: false });
+    let isDataLoading = false;
+    let pendingLoad = false;
 
-      if (error) return console.error(error);
-      sessionsData = data;
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        loadHistory();
+      }
+    });
+
+    async function loadHistory() {
+      if (isDataLoading) {
+        pendingLoad = true;
+        return;
+      }
+      isDataLoading = true;
+      try {
+        const { data, error } = await window.supabase
+          .from('sessions')
+          .select('*, matches(id)')
+          .order('start_time', { ascending: false });
+
+        if (error) return console.error(error);
+        sessionsData = data;
 
       const isLoggedIn = localStorage.getItem('sb-tcdtgptiwjmoxugfjvmh-auth-token') !== null;
       document.getElementById('th-actions').classList.remove('hidden');
@@ -318,6 +333,15 @@
           </tr>
         `;
       }).join('');
+      } catch (err) {
+        console.error("Ошибка загрузки истории:", err);
+      } finally {
+        isDataLoading = false;
+        if (pendingLoad) {
+          pendingLoad = false;
+          loadHistory();
+        }
+      }
     }
 
     function editSession(id) {

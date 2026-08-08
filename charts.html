@@ -232,6 +232,9 @@
       }
     }
 
+    let isDataLoading = false;
+    let pendingLoad = false;
+
     // Инициализация при загрузке
     document.addEventListener("DOMContentLoaded", async () => {
       await fetchSupabaseData();
@@ -239,8 +242,20 @@
       switchTab('pulse');
     });
 
+    document.addEventListener("visibilitychange", async () => {
+      if (document.visibilityState === "visible") {
+        await fetchSupabaseData();
+        renderChart();
+      }
+    });
+
     // 1. Загрузка реальных данных из Supabase
     async function fetchSupabaseData() {
+        if (isDataLoading) {
+            pendingLoad = true;
+            return;
+        }
+        isDataLoading = true;
         try {
             // Получаем цель из профиля
             const { data: profileData } = await window.supabase
@@ -286,6 +301,12 @@
         } catch (error) {
             console.error("Ошибка загрузки данных:", error);
             document.getElementById('chart-loader').innerHTML = `<p class="font-forum text-error tracking-widest uppercase">Ошибка БД</p>`;
+        } finally {
+            isDataLoading = false;
+            if (pendingLoad) {
+                pendingLoad = false;
+                fetchSupabaseData().then(renderChart);
+            }
         }
     }
 

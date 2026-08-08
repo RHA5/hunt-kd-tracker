@@ -647,7 +647,15 @@
         .subscribe();
     });
 
+    let isDataLoading = false;
+    let pendingLoad = false;
+
     async function loadData() {
+      if (isDataLoading) {
+        pendingLoad = true;
+        return;
+      }
+      isDataLoading = true;
       try {
         await loadGlobalStats();
         await loadChallengeHistory();
@@ -655,8 +663,20 @@
         calculateAndRender();
       } catch (err) {
         console.error("Ошибка загрузки данных:", err);
+      } finally {
+        isDataLoading = false;
+        if (pendingLoad) {
+          pendingLoad = false;
+          debouncedLoadData();
+        }
       }
     }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        debouncedLoadData();
+      }
+    });
 
     async function loadGlobalStats() {
       const { data, error } = await window.supabase
